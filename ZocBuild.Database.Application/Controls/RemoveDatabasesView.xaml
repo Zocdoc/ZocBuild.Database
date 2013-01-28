@@ -1,0 +1,34 @@
+﻿<UserControl x:Class="ZocBuild.Database.Application.Controls.RemoveDatabasesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:zbVM="clr-namespace:ZocBuild.Database.Application.ViewModels"
+             mc:Ignorable="d" d:DataContext="{d:DesignInstance zbVM:MainWindowViewModel}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        
+        <ListBox
+            Name="lbDatabases" Grid.Row="0" Margin="2" ItemsSource="{Binding Databases}" HorizontalContentAlignment="Stretch">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{Binding}" Margin="2" VerticalAlignment="Center" />
+                        <Button Name="btDelete" Grid.Column="1" Content="Remove" Click="btDelete_Click" Margin="2" VerticalAlignment="Center" />
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        
+        <Button
+            Name="btOk" Grid.Row="1" Content="OK" Margin="2"
+            HorizontalAlignment="Right" MinWidth="50" Click="btOk_Click" />
+    </Grid>
+</UserControl>

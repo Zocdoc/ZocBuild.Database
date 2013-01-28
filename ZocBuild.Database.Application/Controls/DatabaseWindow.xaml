@@ -1,0 +1,14 @@
+﻿<Window x:Class="ZocBuild.Database.Application.Controls.DatabaseWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:zb="clr-namespace:ZocBuild.Database.Application.Controls"
+        Title="Add or Remove Databases" Height="300" Width="300" MinHeight="300" MinWidth="300">
+    <TabControl Margin="2">
+        <TabItem Header="Add Database">
+            <zb:AddDatabaseView x:Name="add" DatabaseAdded="add_DatabaseAdded" Cancelled="add_Cancelled" />
+        </TabItem>
+        <TabItem Header="Remove Databases">
+            <zb:RemoveDatabasesView x:Name="remove" Closed="remove_Closed" />
+        </TabItem>
+    </TabControl>
+</Window>

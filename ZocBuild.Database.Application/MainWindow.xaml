@@ -1,0 +1,115 @@
+﻿<Window x:Class="ZocBuild.Database.Application.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:zbC="clr-namespace:ZocBuild.Database.Application.Converters"
+        xmlns:zbVM="clr-namespace:ZocBuild.Database.Application.ViewModels"
+        mc:Ignorable="d" d:DataContext="{d:DesignInstance zbVM:MainWindowViewModel}"
+        Title="ZocBuild.Database" MinHeight="350" MinWidth="525">
+    <Window.Resources>
+        <zbC:RevisionIdentifierConverter x:Key="riConverter" SelectedType="{Binding SelectedSourceType}" />
+    </Window.Resources>
+    <Grid Margin="5">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock
+            Grid.Column="0" Grid.Row="0" Text="Database:" Margin="2" VerticalAlignment="Center" />
+        <ComboBox
+            Name="cbDatabases" Grid.Column="1" Grid.Row="0" MinWidth="100" Margin="2" VerticalAlignment="Center"
+            ItemsSource="{Binding Databases}" SelectedItem="{Binding SelectedDatabase, Mode=TwoWay}" IsEnabled="{Binding IsReady}" />
+        <Button
+            Name="btAddDb" Grid.Column="2" Grid.Row="0" Content="Add/Remove" MinWidth="50"
+            Margin="2" VerticalAlignment="Center" Click="btAddDb_Click" IsEnabled="{Binding IsReady}" /> 
+
+        <ComboBox
+            Name="cbSourceType" Grid.Column="0" Grid.Row="1" Margin="2" MinWidth="115"
+            SelectedItem="{Binding SelectedSourceType, Mode=TwoWay}" IsEnabled="{Binding IsReady}"
+            VerticalAlignment="Center" SelectionChanged="cbSourceType_SelectionChanged">
+            <ComboBox.ItemsSource>
+                <Binding Source="{x:Static zbC:RevisionIdentifierConverter.IdentifierTypes}" />
+            </ComboBox.ItemsSource>
+        </ComboBox>
+        <TextBox
+            Name="tbSourceChangeset" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2"
+            Width="200" Margin="2" VerticalAlignment="Center" IsEnabled="{Binding IsReady}">
+            <TextBox.Text>
+                <Binding Path="SourceChangeset" Mode="TwoWay" Converter="{StaticResource riConverter}">
+                </Binding>
+            </TextBox.Text>
+        </TextBox>
+
+        <!--
+        <TextBlock
+            Grid.Column="0" Grid.Row="2" Text="Destination Revision:" Margin="2" VerticalAlignment="Center" />
+        <TextBox
+            Name="tbDestinationChangeset" Grid.Column="1" Grid.Row="2" Width="100" Margin="2" VerticalAlignment="Center"
+            Text="{Binding DestinationChangeset, Mode=TwoWay, Converter={StaticResource changesetIdConverter}}" />
+        -->
+        
+        <Button
+            Name="btUpdate" Grid.Column="4" Grid.Row="0" Grid.RowSpan="3"
+            Content="Load Scripts" MinWidth="115" Margin="2" VerticalAlignment="Bottom"
+            IsEnabled="{Binding CanUpdate}" Click="btUpdate_Click" />
+        
+        <DataGrid
+            Name="dgBuildItems" Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="5" 
+            AutoGenerateColumns="False" IsReadOnly="True" ItemsSource="{Binding Items}" Margin="2">
+            <DataGrid.RowDetailsTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Vertical" d:DataContext="{d:DesignInstance zbVM:BuildItemViewModel}">
+                        <TextBlock Text="Dependencies:" Margin="2" />
+                        <TreeView ItemsSource="{Binding Item.Dependencies}" BorderThickness="0">
+                            <TreeView.ItemTemplate>
+                                <HierarchicalDataTemplate ItemsSource="{Binding Dependencies}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding DatabaseObject.ObjectName}" />
+                                    </StackPanel>
+                                </HierarchicalDataTemplate>
+                            </TreeView.ItemTemplate>
+                        </TreeView>
+                    </StackPanel>
+                </DataTemplate>
+            </DataGrid.RowDetailsTemplate>
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Type" Binding="{Binding DatabaseObject.ObjectType}" />
+                <DataGridTextColumn Header="Name" Binding="{Binding DatabaseObject.ObjectName}" Width="*" />
+                <DataGridTextColumn Header="Schema" Binding="{Binding DatabaseObject.SchemaName}" />
+                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100">
+                    <DataGridTextColumn.CellStyle>
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="ToolTip">
+                                <Setter.Value>
+                                    <StackPanel Orientation="Vertical" MaxWidth="200">
+                                        <TextBlock Text="{Binding ErrorTitle}" FontWeight="Bold" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="ToolTipService.IsEnabled" Value="{Binding ShowError}" />
+                        </Style>
+                    </DataGridTextColumn.CellStyle>
+                </DataGridTextColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+        
+        <Button
+            Name="btBuild" Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="5"
+            Content="Build" MinWidth="115" Margin="2" HorizontalAlignment="Center"
+            IsEnabled="{Binding CanBuild}" Click="btBuild_Click" />
+        
+    </Grid>
+</Window>
