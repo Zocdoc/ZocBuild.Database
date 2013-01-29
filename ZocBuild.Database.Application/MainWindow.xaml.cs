@@ -91,7 +91,7 @@ namespace ZocBuild.Database.Application
                 //dvcsRepo.DestinationChangeset = ((MainWindowViewModel)DataContext).DestinationChangeset;
             }
             ((MainWindowViewModel)DataContext).IsReady = false;
-            Task.Run(() => Update(db));
+            Task.Factory.StartNew(() => Update(db));
         }
 
         private void btBuild_Click(object sender, RoutedEventArgs e)
@@ -99,13 +99,13 @@ namespace ZocBuild.Database.Application
             var items = ((MainWindowViewModel)DataContext).Items.Select(x => x.Item);
             var db = ((MainWindowViewModel) DataContext).SelectedDatabase;
             ((MainWindowViewModel) DataContext).IsReady = false;
-            Task.Run(() => Build(db, items));
+            Task.Factory.StartNew(() => Build(db, items));
         }
 
         private async Task Update(Database db)
         {
             var buildItems = await db.GetChangedBuildItemsAsync();
-            await Dispatcher.BeginInvoke((Action)(() =>
+            Dispatcher.BeginInvoke((Action)(() =>
             {
                 ((MainWindowViewModel)DataContext).IsReady = true;
                 ((MainWindowViewModel)DataContext).IsDone = false;
@@ -118,7 +118,7 @@ namespace ZocBuild.Database.Application
         private async Task Build(Database db, IEnumerable<BuildItem> items)
         {
             await db.BuildAsync(items);
-            await Dispatcher.BeginInvoke((Action) (() =>
+            Dispatcher.BeginInvoke((Action) (() =>
                 {
                     ((MainWindowViewModel)DataContext).IsReady = true;
                     ((MainWindowViewModel)DataContext).IsDone = true;
