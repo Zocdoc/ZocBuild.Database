@@ -97,7 +97,10 @@ namespace ZocBuild.Database
 
             foreach (var dbObject in scriptDict.Values)
             {
-                dbObject.AssignExistingDatabaseDependencies(currentDbState[dbObject.ScriptObject].Dependencies);
+                if (currentDbState.ContainsKey(dbObject.ScriptObject))
+                {
+                    dbObject.AssignExistingDatabaseDependencies(currentDbState[dbObject.ScriptObject].Dependencies);
+                }
             }
 
             var scriptDependencies = (new ScriptFileWalking()).GetDependencies(scriptDict.Values);
