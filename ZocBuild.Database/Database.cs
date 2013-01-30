@@ -126,20 +126,22 @@ namespace ZocBuild.Database
             using (var conn = Connection())
             {
                 await conn.OpenAsync();
-                var trans = conn.BeginTransaction();
-                var result = await BuildAsync(items, conn, trans);
-                if (result)
+                using (var trans = conn.BeginTransaction())
                 {
-                    try
+                    var result = await BuildAsync(items, conn, trans);
+                    if (result)
                     {
-                        trans.Commit();
+                        try
+                        {
+                            trans.Commit();
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            return false;
+                        }
                     }
-                    catch (Exception)
-                    {
-                        return false;
-                    }
+                    return result;
                 }
-                return result;
             }
         }
 
