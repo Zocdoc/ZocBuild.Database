@@ -57,11 +57,11 @@ namespace ZocBuild.Database
             DependencyDepth = FindDependencyDepth(Referencers, 0);
             status = script.ScriptError != null ? script.ScriptError.Status : BuildStatusType.None;
 
-            if (script.Sql.ScriptAction == ScriptActionType.Drop)
+            if (script.Sql != null && script.Sql.ScriptAction == ScriptActionType.Drop)
             {
                 BuildAction = BuildActionType.Drop;
             }
-            else if (objectExists && Script.ScriptObject.ObjectType == DatabaseObjectType.Type)
+            else if (objectExists && script.Sql != null && Script.ScriptObject.ObjectType == DatabaseObjectType.Type)
             {
                 BuildAction = BuildActionType.DropAndCreate;
             }

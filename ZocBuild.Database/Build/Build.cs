@@ -15,17 +15,36 @@ namespace ZocBuild.Database.Build
 {
     class Build
     {
-        public async Task BuildItemsAsync(IEnumerable<BuildItem> items, Database db)
+        /// <summary>
+        /// Builds the given items on the database.
+        /// </summary>
+        /// <remarks>
+        /// This method will first drop objects marked for Drop or DropAndCreate.  It then creates 
+        /// or alters objects marked for Create, DropAndCreate, or Alter.
+        /// 
+        /// If any one script fails to build, the entire transaction will be rolled back.
+        /// </remarks>
+        /// <param name="items">The items to build.</param>
+        /// <param name="connection">The open connection to the database.</param>
+        /// <param name="transaction">The open transaction on which the scripts should be executed.</param>
+        /// <returns>A flag that indicates whether all scripts were executed successfully.</returns>
+        public async Task<bool> BuildItemsAsync(IEnumerable<BuildItem> items, SqlConnection connection, SqlTransaction transaction)
         {
-            using (var conn = db.Connection())
+            await DropAsync(items, connection, transaction);
+            await CreateAsync(items, connection, transaction);
+
+            if (items.Any(x => x.Error != null))
             {
-                await conn.OpenAsync();
-                await DropAsync(items, conn);
-                await CreateAsync(items, conn);
+                transaction.Rollback();
+                return false;
+            }
+            else
+            {
+                return true;
             }
         }
 
-        private async Task DropAsync(IEnumerable<BuildItem> items, SqlConnection connection)
+        private async Task DropAsync(IEnumerable<BuildItem> items, SqlConnection connection, SqlTransaction transaction)
         {
             var scriptsToReferencers = items.ToDictionary(x => x, y => y.Referencers.ToList());
             Action<BuildItem> onSuccess = i => { };
@@ -37,10 +56,11 @@ namespace ZocBuild.Database.Build
                 // Set status of referencers
                 DependencyError.SetDependencyErrorStatus(i.Referencers, Enumerable.Repeat(i, 1));
             };
-            await ApplyScriptsAsync(scriptsToReferencers, new ScriptDropExecutor(connection), x => x.Dependencies, y => true, onSuccess, onFailure);
+            await ApplyScriptsAsync(scriptsToReferencers, new ScriptDropExecutor(connection, transaction),
+                x => x.Dependencies, y => true, onSuccess, onFailure);
         }
 
-        private async Task CreateAsync(IEnumerable<BuildItem> items, SqlConnection connection)
+        private async Task CreateAsync(IEnumerable<BuildItem> items, SqlConnection connection, SqlTransaction transaction)
         {
             var scriptsToDependencies = items.ToDictionary(x => x, y => y.Dependencies.ToList());
             Action<BuildItem> onSuccess = i => i.ReportSuccess();
@@ -52,7 +72,8 @@ namespace ZocBuild.Database.Build
                     // Set status of referencers
                     DependencyError.SetDependencyErrorStatus(i.Referencers, Enumerable.Repeat(i, 1));
                 };
-            await ApplyScriptsAsync(scriptsToDependencies, new ScriptCreateExecutor(connection), x => x.Referencers, y => y.Status == BuildItem.BuildStatusType.None, onSuccess, onFailure);
+            await ApplyScriptsAsync(scriptsToDependencies, new ScriptCreateExecutor(connection, transaction),
+                x => x.Referencers, y => y.Status == BuildItem.BuildStatusType.None, onSuccess, onFailure);
         }
 
         private async Task ApplyScriptsAsync(IDictionary<BuildItem, List<BuildItem>> scriptsToDependencies, IScriptExecutor executor, Func<BuildItem, IEnumerable<BuildItem>> referencerFunc, Func<BuildItem, bool> eligibilityFunc, Action<BuildItem> successAction, Action<BuildItem, Exception> failureAction)

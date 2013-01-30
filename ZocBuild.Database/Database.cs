@@ -97,7 +97,10 @@ namespace ZocBuild.Database
 
             foreach (var dbObject in scriptDict.Values)
             {
-                dbObject.AssignExistingDatabaseDependencies(currentDbState[dbObject.ScriptObject].Dependencies);
+                if (currentDbState.ContainsKey(dbObject.ScriptObject))
+                {
+                    dbObject.AssignExistingDatabaseDependencies(currentDbState[dbObject.ScriptObject].Dependencies);
+                }
             }
 
             var scriptDependencies = (new ScriptFileWalking()).GetDependencies(scriptDict.Values);
@@ -113,12 +116,52 @@ namespace ZocBuild.Database
         /// </summary>
         /// <remarks>
         /// The build is executed in the order of the depedency graph.
+        /// 
+        /// If any one script fails to build, the entire transaction will be rolled back.
         /// </remarks>
         /// <param name="items">The items to build.</param>
-        public async Task BuildAsync(IEnumerable<BuildItem> items)
+        /// <returns>A flag that indicates whether all scripts were executed successfully.</returns>
+        public async Task<bool> BuildAsync(IEnumerable<BuildItem> items)
+        {
+            using (var conn = Connection())
+            {
+                await conn.OpenAsync();
+                var trans = conn.BeginTransaction();
+                var result = await BuildAsync(items, conn, trans);
+                if (result)
+                {
+                    try
+                    {
+                        trans.Commit();
+                    }
+                    catch (Exception)
+                    {
+                        return false;
+                    }
+                }
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// Builds the given items on the database.
+        /// </summary>
+        /// <remarks>
+        /// The build is executed in the order of the depedency graph.
+        /// 
+        /// The given connection must be for the same database to which the <see cref="Connection"/> 
+        /// property would connect.  The given transaction must be for the given connection.
+        /// 
+        /// If any one script fails to build, the entire transaction will be rolled back.
+        /// </remarks>
+        /// <param name="items">The items to build.</param>
+        /// <param name="connection">The open connection to the database.</param>
+        /// <param name="transaction">The open transaction on which the scripts should be executed.</param>
+        /// <returns>A flag that indicates whether all scripts were executed successfully.</returns>
+        public async Task<bool> BuildAsync(IEnumerable<BuildItem> items, SqlConnection connection, SqlTransaction transaction)
         {
             Build.Build b = new Build.Build();
-            await b.BuildItemsAsync(items, this);
+            return await b.BuildItemsAsync(items, connection, transaction);
         }
 
         private IEnumerable<BuildItem> CreateItems(IDictionary<ScriptFile, ISet<DatabaseObject>> scriptDependencies, ISet<DatabaseObject> existingObjects)

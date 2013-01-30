@@ -47,7 +47,7 @@ namespace ZocBuild.Database.Application
                 CompositionContainer container = new CompositionContainer(catalog);
                 container.ComposeParts(this);
             }
-            catch (CompositionException ex)
+            catch (CompositionException)
             {
                 sqlParser = null;
             }
