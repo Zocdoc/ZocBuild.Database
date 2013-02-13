@@ -83,7 +83,7 @@ Where
 	o.[type] in ('V', 'FN', 'IF', 'P')
 	and dep.[type] in ('V', 'FN', 'IF', 'P')
 ", conn);
-                using(var reader = cmd.ExecuteReader())
+                using(var reader =  cmd.ExecuteReader())
                 {
                     while(reader.Read())
                     {
