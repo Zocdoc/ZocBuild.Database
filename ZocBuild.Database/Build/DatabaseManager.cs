@@ -21,7 +21,7 @@ namespace ZocBuild.Database.Build
         {
             using (var conn = Database.Connection())
             {
-                await conn.OpenAsync();
+                conn.Open();
                 SqlCommand cmd = new SqlCommand(@"
 Select
 	o.name as objectName,
@@ -44,9 +44,9 @@ From sys.types t
 Where t.is_user_defined = 1
 ", conn);
                 ISet<DatabaseObject> result = new HashSet<DatabaseObject>(new DatabaseObjectComparer());
-                using (var reader = await cmd.ExecuteReaderAsync())
+                using (var reader = cmd.ExecuteReader())
                 {
-                    while (await reader.ReadAsync())
+                    while (reader.Read())
                     {
                         result.Add(new TypedDatabaseObject(
                                        Database.ServerName,
