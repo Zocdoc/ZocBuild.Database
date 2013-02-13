@@ -22,7 +22,7 @@ namespace ZocBuild.Database.DependencyWalking
             Dictionary<TypedDatabaseObject, GraphNode> objects = new Dictionary<TypedDatabaseObject, GraphNode>(new TypedDatabaseObjectComparer());
             using (var conn = Database.Connection())
             {
-                await conn.OpenAsync();
+                conn.Open();
                 SqlCommand cmd = new SqlCommand(@"
 Select
 	ISNULL(o.name, t.name) as objectName,
@@ -83,9 +83,9 @@ Where
 	o.[type] in ('V', 'FN', 'IF', 'P')
 	and dep.[type] in ('V', 'FN', 'IF', 'P')
 ", conn);
-                using(var reader = await cmd.ExecuteReaderAsync())
+                using(var reader = cmd.ExecuteReader())
                 {
-                    while(await reader.ReadAsync())
+                    while(reader.Read())
                     {
                         var record = new DependencyRecord()
                         {
