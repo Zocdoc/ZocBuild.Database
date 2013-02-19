@@ -64,6 +64,30 @@ namespace ZocBuild.Database.ScriptRepositories
         #region IScriptRepository Members
 
         /// <summary>
+        /// Gets a string that describes the source state against which the script repository's 
+        /// current state is compared to find changes.
+        /// </summary>
+        /// <remarks>
+        /// If <see cref="SourceChangeset"/> is not null, this is the string representation of that 
+        /// property's value.  If it is null, this is a string indicating that all objects will be 
+        /// rebuilt.
+        /// </remarks>
+        public override string ChangeSourceDescription
+        {
+            get
+            {
+                if (SourceChangeset != null)
+                {
+                    return SourceChangeset.ToString();
+                }
+                else
+                {
+                    return "Full Rebuild";
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets the build scripts for database objects that have changed since a specified 
         /// repository state.
         /// </summary>
@@ -72,7 +96,7 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <see cref="SourceChangeset"/> and the current HEAD.
         /// </remarks>
         /// <returns>A collection of build scripts.</returns>
-        public override async Task<IEnumerable<ScriptFile>> GetChangedScriptsAsync()
+        public override async Task<ICollection<ScriptFile>> GetChangedScriptsAsync()
         {
             var files = await GetDiffedFilesAsync();
             var scripts = new List<ScriptFile>();
@@ -103,6 +127,7 @@ namespace ZocBuild.Database.ScriptRepositories
         {
             // TODO: make async
             p.WaitForExit();
+            await Task.Yield();
         }
 
         #endregion

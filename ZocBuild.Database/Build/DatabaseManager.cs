@@ -4,6 +4,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ZocBuild.Database.Logging;
 using ZocBuild.Database.Util;
 
 namespace ZocBuild.Database.Build
@@ -21,6 +22,7 @@ namespace ZocBuild.Database.Build
         {
             using (var conn = Database.Connection())
             {
+                await Database.Logger.LogMessageAsync("Opening connection to database " + conn.Database + " to determine which objects already exist.", SeverityLevel.Verbose);
                 conn.Open();
                 SqlCommand cmd = new SqlCommand(@"
 Select
@@ -44,6 +46,7 @@ From sys.types t
 Where t.is_user_defined = 1
 ", conn);
                 ISet<DatabaseObject> result = new HashSet<DatabaseObject>(new DatabaseObjectComparer());
+                await Database.Logger.LogMessageAsync("Executing query to find pre-existing objects.", SeverityLevel.Verbose);
                 using (var reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
@@ -56,6 +59,7 @@ Where t.is_user_defined = 1
                                        DatabaseIdentifierUtility.GetObjectTypeFromString(reader["objectType"] as string)));
                     }
                 }
+                await Database.Logger.LogMessageAsync("Found " + result.Count + " existing objects in the database's current state.", SeverityLevel.Verbose);
                 return result;
             }
         }

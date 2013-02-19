@@ -82,10 +82,33 @@ namespace ZocBuild.Database.ScriptRepositories
         #region IScriptRepository Members
 
         /// <summary>
+        /// Gets a string that describes the location of this script repository.
+        /// </summary>
+        /// <remarks>
+        /// This is the file system path of the directory in which the scripts are located.
+        /// </remarks>
+        public string RepositoryDescription
+        {
+            get { return ScriptDirectory.FullName; }
+        }
+
+        /// <summary>
+        /// This property is not supported and calling it will raise a <see cref="NotSupportedException"/>.
+        /// </summary>
+        /// <returns>Nothing; an exception will be raised.</returns>
+        public virtual string ChangeSourceDescription
+        {
+            get
+            {
+                throw new NotSupportedException();
+            }
+        }
+
+        /// <summary>
         /// This method is not supported and calling it will raise a <see cref="NotSupportedException"/>.
         /// </summary>
         /// <returns>Nothing; an exception will be raised.</returns>
-        public virtual Task<IEnumerable<ScriptFile>> GetChangedScriptsAsync()
+        public virtual Task<ICollection<ScriptFile>> GetChangedScriptsAsync()
         {
             throw new NotSupportedException();
         }
@@ -94,7 +117,7 @@ namespace ZocBuild.Database.ScriptRepositories
         /// Gets all the build scripts for database objects contained in the repository.
         /// </summary>
         /// <returns>A collection of build scripts.</returns>
-        public virtual async Task<IEnumerable<ScriptFile>> GetAllScriptsAsync()
+        public virtual async Task<ICollection<ScriptFile>> GetAllScriptsAsync()
         {
             return await GetScriptsAsync(f => true);
         }
@@ -124,7 +147,7 @@ namespace ZocBuild.Database.ScriptRepositories
         /// </summary>
         /// <param name="filter">The predicate with which the build scripts are filtered.</param>
         /// <returns>A collection of build scripts.</returns>
-        protected virtual async Task<IEnumerable<ScriptFile>> GetScriptsAsync(Func<FileInfo, bool> filter)
+        protected virtual async Task<ICollection<ScriptFile>> GetScriptsAsync(Func<FileInfo, bool> filter)
         {
             var scripts = new List<ScriptFile>();
             foreach(var f in ScriptDirectory.GetFiles("*.sql", SearchOption.AllDirectories).Where(filter))
