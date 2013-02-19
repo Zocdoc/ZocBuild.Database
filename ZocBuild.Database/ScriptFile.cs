@@ -143,7 +143,7 @@ namespace ZocBuild.Database
                 ScriptError = new MismatchedObjectTypeError(ScriptObject.ObjectName, ScriptObject.ObjectType, Sql.ObjectType);
                 Sql = null;
             }
-            else if (ScriptObject.SchemaName != Sql.SchemaName)
+            else if (!ScriptObject.SchemaName.Equals(Sql.SchemaName, StringComparison.InvariantCultureIgnoreCase))
             {
                 ScriptError = new MismatchedSchemaError(ScriptObject.ObjectName, ScriptObject.SchemaName, Sql.SchemaName);
                 Sql = null;
