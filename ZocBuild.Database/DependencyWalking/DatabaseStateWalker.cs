@@ -4,6 +4,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ZocBuild.Database.Logging;
 using ZocBuild.Database.Util;
 
 namespace ZocBuild.Database.DependencyWalking
@@ -22,6 +23,7 @@ namespace ZocBuild.Database.DependencyWalking
             Dictionary<TypedDatabaseObject, GraphNode> objects = new Dictionary<TypedDatabaseObject, GraphNode>(new TypedDatabaseObjectComparer());
             using (var conn = Database.Connection())
             {
+                await Database.Logger.LogMessageAsync("Opening connection to database " + conn.Database + " to collect dependency relationships.", SeverityLevel.Verbose);
                 await conn.OpenAsync();
                 SqlCommand cmd = new SqlCommand(@"
 Select
@@ -83,6 +85,7 @@ Where
 	o.[type] in ('V', 'FN', 'IF', 'P')
 	and dep.[type] in ('V', 'FN', 'IF', 'P')
 ", conn);
+                await Database.Logger.LogMessageAsync("Executing query to find dependency relationships.", SeverityLevel.Verbose);
                 using(var reader = await cmd.ExecuteReaderAsync())
                 {
                     while(await reader.ReadAsync())
@@ -111,6 +114,7 @@ Where
                     }
                 }
             }
+            await Database.Logger.LogMessageAsync("Found " + objects.Count + " objects with dependency relationships in the database's current state.", SeverityLevel.Verbose);
             return objects;
         }
 

@@ -68,6 +68,10 @@
     <Compile Include="Exceptions\SqlParseException.cs" />
     <Compile Include="Exceptions\UnexpectedObjectTypeException.cs" />
     <Compile Include="IScriptRepository.cs" />
+    <Compile Include="Logging\ConsoleLogger.cs" />
+    <Compile Include="Logging\EmptyLogger.cs" />
+    <Compile Include="Logging\ILogger.cs" />
+    <Compile Include="Logging\SeverityLevel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScriptRepositories\DvcsScriptRepositoryBase.cs" />
     <Compile Include="ScriptRepositories\FileSystemScriptRepository.cs" />
