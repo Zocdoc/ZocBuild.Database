@@ -10,7 +10,6 @@ namespace ZocBuild.Database.Logging
     {
         public async Task LogMessageAsync(string message, SeverityLevel severity)
         {
-            await Task.Yield();
         }
     }
 }

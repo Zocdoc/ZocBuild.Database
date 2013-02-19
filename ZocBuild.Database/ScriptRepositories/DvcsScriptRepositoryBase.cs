@@ -127,7 +127,6 @@ namespace ZocBuild.Database.ScriptRepositories
         {
             // TODO: make async
             p.WaitForExit();
-            await Task.Yield();
         }
 
         #endregion
