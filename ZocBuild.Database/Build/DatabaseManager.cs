@@ -23,7 +23,7 @@ namespace ZocBuild.Database.Build
             using (var conn = Database.Connection())
             {
                 await Database.Logger.LogMessageAsync("Opening connection to database " + conn.Database + " to determine which objects already exist.", SeverityLevel.Verbose);
-                await conn.OpenAsync();
+                conn.Open();
                 SqlCommand cmd = new SqlCommand(@"
 Select
 	o.name as objectName,
@@ -47,9 +47,9 @@ Where t.is_user_defined = 1
 ", conn);
                 ISet<DatabaseObject> result = new HashSet<DatabaseObject>(new DatabaseObjectComparer());
                 await Database.Logger.LogMessageAsync("Executing query to find pre-existing objects.", SeverityLevel.Verbose);
-                using (var reader = await cmd.ExecuteReaderAsync())
+                using (var reader = cmd.ExecuteReader())
                 {
-                    while (await reader.ReadAsync())
+                    while (reader.Read())
                     {
                         result.Add(new TypedDatabaseObject(
                                        Database.ServerName,

@@ -24,7 +24,7 @@ namespace ZocBuild.Database.DependencyWalking
             using (var conn = Database.Connection())
             {
                 await Database.Logger.LogMessageAsync("Opening connection to database " + conn.Database + " to collect dependency relationships.", SeverityLevel.Verbose);
-                await conn.OpenAsync();
+                conn.Open();
                 SqlCommand cmd = new SqlCommand(@"
 Select
 	ISNULL(o.name, t.name) as objectName,
@@ -86,9 +86,9 @@ Where
 	and dep.[type] in ('V', 'FN', 'IF', 'P')
 ", conn);
                 await Database.Logger.LogMessageAsync("Executing query to find dependency relationships.", SeverityLevel.Verbose);
-                using(var reader = await cmd.ExecuteReaderAsync())
+                using(var reader = cmd.ExecuteReader())
                 {
-                    while(await reader.ReadAsync())
+                    while(reader.Read())
                     {
                         var record = new DependencyRecord()
                         {
