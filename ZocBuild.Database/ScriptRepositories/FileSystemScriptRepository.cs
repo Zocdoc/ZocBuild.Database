@@ -140,6 +140,23 @@ namespace ZocBuild.Database.ScriptRepositories
 
         #endregion
 
+        /// <summary>
+        /// Retrieves the script file for the given database object identifier, if and only if the 
+        /// database object belongs to this script repository.
+        /// </summary>
+        /// <param name="dbObject">The database object for which a script file is desired.</param>
+        /// <returns>A file descriptor for the script.</returns>
+        public FileInfo GetScriptFile(TypedDatabaseObject dbObject)
+        {
+            if (!string.Equals(dbObject.ServerName, ServerName, StringComparison.InvariantCultureIgnoreCase)
+                || !string.Equals(dbObject.DatabaseName, DatabaseName, StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new ArgumentException("The given database object identifier does not belong to the database for which this script repository builds.", "dbObject");
+            }
+            var file = new FileInfo(Path.Combine(ScriptDirectory.FullName, dbObject.SchemaName, dbObject.ObjectType.ToString(), dbObject.ObjectName + ".sql"));
+            return file;
+        }
+
         #region Helper methods
 
         /// <summary>
