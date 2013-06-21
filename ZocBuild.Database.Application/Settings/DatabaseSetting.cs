@@ -21,7 +21,7 @@ namespace ZocBuild.Database.Application.Settings
         {
             var connectionStr = ConnectionString;
             Func<SqlConnection> connection = () => new SqlConnection(connectionStr);
-            var repo = new GitScriptRepository(ScriptsPath, ServerName, DatabaseName, pathToGit, sqlParser);
+            var repo = new GitScriptRepository(ScriptsPath, ServerName, DatabaseName, pathToGit, sqlParser, false);
             return new Database(ServerName, DatabaseName, connection, repo);
         }
 

@@ -36,8 +36,9 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <param name="serverName">The name of the database server.</param>
         /// <param name="databaseName">The name of the database.</param>
         /// <param name="sqlParser">The sql script parser for reading the SQL file contents.</param>
-        public FileSystemScriptRepository(string scriptDirectoryPath, string serverName, string databaseName, IParser sqlParser)
-            : this(new DirectoryInfo(scriptDirectoryPath), serverName, databaseName, sqlParser)
+        /// <param name="ignoreUnsupportedSubdirectories">A flag indicating whether to ignore subdirectories that don't conform to the expected naming convention.</param>
+        public FileSystemScriptRepository(string scriptDirectoryPath, string serverName, string databaseName, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
+            : this(new DirectoryInfo(scriptDirectoryPath), serverName, databaseName, sqlParser, ignoreUnsupportedSubdirectories)
         {
         }
 
@@ -48,11 +49,13 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <param name="serverName">The name of the database server.</param>
         /// <param name="databaseName">The name of the database.</param>
         /// <param name="sqlParser">The sql script parser for reading the SQL file contents.</param>
-        public FileSystemScriptRepository(DirectoryInfo scriptDirectory, string serverName, string databaseName, IParser sqlParser)
+        /// <param name="ignoreUnsupportedSubdirectories">A flag indicating whether to ignore subdirectories that don't conform to the expected naming convention.</param>
+        public FileSystemScriptRepository(DirectoryInfo scriptDirectory, string serverName, string databaseName, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
         {
             ScriptDirectory = scriptDirectory;
             ServerName = serverName.TrimObjectName();
             DatabaseName = databaseName.TrimObjectName();
+            IgnoreUnsupportedSubdirectories = ignoreUnsupportedSubdirectories;
             objectTypes = Enum.GetValues(typeof(DatabaseObjectType)).Cast<DatabaseObjectType>()
                 .ToDictionary(x => x.ToString(), y => y, StringComparer.InvariantCultureIgnoreCase);
             this.sqlParser = sqlParser;
@@ -76,6 +79,12 @@ namespace ZocBuild.Database.ScriptRepositories
         /// Gets the name of the database.
         /// </summary>
         public string DatabaseName { get; private set; }
+
+        /// <summary>
+        /// Gets a flag that indicates whether subdirectories that don't follow the expected naming 
+        /// convention should be ignored.
+        /// </summary>
+        public bool IgnoreUnsupportedSubdirectories { get; private set; }
 
         #endregion
 
@@ -166,8 +175,18 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <returns>A collection of build scripts.</returns>
         protected virtual async Task<ICollection<ScriptFile>> GetScriptsAsync(Func<FileInfo, bool> filter)
         {
+            Func<FileInfo, bool> saferFilter;
+            if (IgnoreUnsupportedSubdirectories)
+            {
+                saferFilter = f => objectTypes.ContainsKey(f.Directory.Name) && filter(f);
+            }
+            else
+            {
+                saferFilter = filter;
+            }
+
             var scripts = new List<ScriptFile>();
-            foreach(var f in ScriptDirectory.GetFiles("*.sql", SearchOption.AllDirectories).Where(filter))
+            foreach (var f in ScriptDirectory.GetFiles("*.sql", SearchOption.AllDirectories).Where(saferFilter))
             {
                 var script = await GetScriptAsync(f);
                 scripts.Add(script);

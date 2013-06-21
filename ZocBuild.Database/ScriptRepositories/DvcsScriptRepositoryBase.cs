@@ -33,8 +33,9 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <param name="serverName">The name of the database server.</param>
         /// <param name="databaseName">The name of the database.</param>
         /// <param name="sqlParser">The sql script parser for reading the SQL file contents.</param>
-        protected DvcsScriptRepositoryBase(string scriptDirectoryPath, string serverName, string databaseName, IParser sqlParser)
-            : base(scriptDirectoryPath, serverName, databaseName, sqlParser)
+        /// <param name="ignoreUnsupportedSubdirectories">A flag indicating whether to ignore subdirectories that don't conform to the expected naming convention.</param>
+        protected DvcsScriptRepositoryBase(string scriptDirectoryPath, string serverName, string databaseName, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
+            : base(scriptDirectoryPath, serverName, databaseName, sqlParser, ignoreUnsupportedSubdirectories)
         {
         }
 
@@ -45,8 +46,9 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <param name="serverName">The name of the database server.</param>
         /// <param name="databaseName">The name of the database.</param>
         /// <param name="sqlParser">The sql script parser for reading the SQL file contents.</param>
-        protected DvcsScriptRepositoryBase(DirectoryInfo scriptDirectory, string serverName, string databaseName, IParser sqlParser)
-            : base(scriptDirectory, serverName, databaseName, sqlParser)
+        /// <param name="ignoreUnsupportedSubdirectories">A flag indicating whether to ignore subdirectories that don't conform to the expected naming convention.</param>
+        protected DvcsScriptRepositoryBase(DirectoryInfo scriptDirectory, string serverName, string databaseName, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
+            : base(scriptDirectory, serverName, databaseName, sqlParser, ignoreUnsupportedSubdirectories)
         {
         }
 

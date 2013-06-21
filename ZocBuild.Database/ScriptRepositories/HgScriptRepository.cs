@@ -12,13 +12,13 @@ namespace ZocBuild.Database.ScriptRepositories
     public class HgScriptRepository : DvcsScriptRepositoryBase
     {
         #region Constructors
-        public HgScriptRepository(string scriptDirectoryPath, string serverName, string databaseName, IParser sqlParser)
-            : base(scriptDirectoryPath, serverName, databaseName, sqlParser)
+        public HgScriptRepository(string scriptDirectoryPath, string serverName, string databaseName, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
+            : base(scriptDirectoryPath, serverName, databaseName, sqlParser, ignoreUnsupportedSubdirectories)
         {
         }
 
-        public HgScriptRepository(DirectoryInfo scriptDirectory, string serverName, string databaseName, IParser sqlParser)
-            : base(scriptDirectory, serverName, databaseName, sqlParser)
+        public HgScriptRepository(DirectoryInfo scriptDirectory, string serverName, string databaseName, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
+            : base(scriptDirectory, serverName, databaseName, sqlParser, ignoreUnsupportedSubdirectories)
         {
         }
         #endregion
