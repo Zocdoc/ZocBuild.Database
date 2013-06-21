@@ -25,6 +25,16 @@ namespace ZocBuild.Database.ScriptRepositories
         
         protected override async Task<ICollection<FileInfo>> GetDiffedFilesAsync()
         {
+            Func<FileInfo, bool> filter;
+            if (IgnoreUnsupportedSubdirectories)
+            {
+                filter = isFileInSupportedDirectory;
+            }
+            else
+            {
+                filter = f => true;
+            }
+
             if (SourceChangeset != null)
             {
                 var args = "status --no-status --rev " + SourceChangeset.ToString() + " \"" + ScriptDirectory.FullName + "\"";
@@ -41,7 +51,7 @@ namespace ZocBuild.Database.ScriptRepositories
                 {
                     var line = await statusProcess.StandardOutput.ReadLineAsync();
                     var file = new FileInfo(Path.Combine(ScriptDirectory.FullName, line));
-                    if (file.Extension.Equals(".sql", StringComparison.InvariantCultureIgnoreCase))
+                    if (file.Extension.Equals(".sql", StringComparison.InvariantCultureIgnoreCase) && filter(file))
                     {
                         result.Add(file);
                     }
@@ -50,7 +60,7 @@ namespace ZocBuild.Database.ScriptRepositories
             }
             else
             {
-                return ScriptDirectory.GetFiles("*.sql", SearchOption.AllDirectories);
+                return ScriptDirectory.GetFiles("*.sql", SearchOption.AllDirectories).Where(filter).ToList();
             }
         }
 
