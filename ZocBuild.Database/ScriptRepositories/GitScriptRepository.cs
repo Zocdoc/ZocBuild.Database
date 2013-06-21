@@ -33,8 +33,9 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <param name="databaseName">The name of the database.</param>
         /// <param name="gitExecutable">The Git executable for interfacing with the dvcs repository.</param>
         /// <param name="sqlParser">The sql script parser for reading the SQL file contents.</param>
-        public GitScriptRepository(string scriptDirectoryPath, string serverName, string databaseName, FileInfo gitExecutable, IParser sqlParser)
-            : base(scriptDirectoryPath, serverName, databaseName, sqlParser)
+        /// <param name="ignoreUnsupportedSubdirectories">A flag indicating whether to ignore subdirectories that don't conform to the expected naming convention.</param>
+        public GitScriptRepository(string scriptDirectoryPath, string serverName, string databaseName, FileInfo gitExecutable, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
+            : base(scriptDirectoryPath, serverName, databaseName, sqlParser, ignoreUnsupportedSubdirectories)
         {
             GitExecutable = gitExecutable;
         }
@@ -47,8 +48,9 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <param name="databaseName">The name of the database.</param>
         /// <param name="gitExecutable">The Git executable for interfacing with the dvcs repository.</param>
         /// <param name="sqlParser">The sql script parser for reading the SQL file contents.</param>
-        public GitScriptRepository(DirectoryInfo scriptDirectory, string serverName, string databaseName, FileInfo gitExecutable, IParser sqlParser)
-            : base(scriptDirectory, serverName, databaseName, sqlParser)
+        /// <param name="ignoreUnsupportedSubdirectories">A flag indicating whether to ignore subdirectories that don't conform to the expected naming convention.</param>
+        public GitScriptRepository(DirectoryInfo scriptDirectory, string serverName, string databaseName, FileInfo gitExecutable, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
+            : base(scriptDirectory, serverName, databaseName, sqlParser, ignoreUnsupportedSubdirectories)
         {
             GitExecutable = gitExecutable;
         }
