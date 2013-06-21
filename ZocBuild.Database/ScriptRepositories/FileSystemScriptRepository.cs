@@ -26,6 +26,7 @@ namespace ZocBuild.Database.ScriptRepositories
     {
         private readonly Dictionary<string, DatabaseObjectType> objectTypes;
         private readonly IParser sqlParser;
+        protected readonly Func<FileInfo, bool> isFileInSupportedDirectory;
 
         #region Constructors
 
@@ -59,6 +60,7 @@ namespace ZocBuild.Database.ScriptRepositories
             objectTypes = Enum.GetValues(typeof(DatabaseObjectType)).Cast<DatabaseObjectType>()
                 .ToDictionary(x => x.ToString(), y => y, StringComparer.InvariantCultureIgnoreCase);
             this.sqlParser = sqlParser;
+            this.isFileInSupportedDirectory = f => objectTypes.ContainsKey(f.Directory.Name);
         }
 
         #endregion
@@ -178,7 +180,7 @@ namespace ZocBuild.Database.ScriptRepositories
             Func<FileInfo, bool> saferFilter;
             if (IgnoreUnsupportedSubdirectories)
             {
-                saferFilter = f => objectTypes.ContainsKey(f.Directory.Name) && filter(f);
+                saferFilter = f => isFileInSupportedDirectory(f) && filter(f);
             }
             else
             {
