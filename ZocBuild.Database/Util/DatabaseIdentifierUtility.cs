@@ -28,6 +28,7 @@ namespace ZocBuild.Database.Util
                 case "FN":
                     return DatabaseObjectType.Function;
                 case "IF":
+                case "TF":
                     return DatabaseObjectType.Function;
                 case "TT":
                     return DatabaseObjectType.Type;

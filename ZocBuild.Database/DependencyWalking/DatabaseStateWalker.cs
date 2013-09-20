@@ -43,7 +43,7 @@ From sys.sql_expression_dependencies sed
 	left outer join sys.objects o
 		on sed.referencing_id = o.[object_id]
 		and sed.referencing_class <> 6
-		and o.[type] in ('V', 'FN', 'IF', 'P')
+		and o.[type] in ('V', 'FN', 'IF', 'TF', 'P')
 	left outer join sys.types t
 		on sed.referencing_id = t.user_type_id
 		and sed.referencing_class = 6
@@ -53,7 +53,7 @@ From sys.sql_expression_dependencies sed
 	left join sys.objects dep
 		on sed.referenced_id = dep.[object_id]
 		and sed.referenced_class <> 6
-		and dep.[type] in ('V', 'FN', 'IF', 'P')
+		and dep.[type] in ('V', 'FN', 'IF', 'TF', 'P')
 Where
 	ISNULL(o.name, t.name) is not null
 	and (
@@ -82,8 +82,8 @@ From sys.sql_dependencies sd
 	inner join sys.schemas deps
 		on dep.[schema_id] = deps.[schema_id]
 Where
-	o.[type] in ('V', 'FN', 'IF', 'P')
-	and dep.[type] in ('V', 'FN', 'IF', 'P')
+	o.[type] in ('V', 'FN', 'IF', 'TF', 'P')
+	and dep.[type] in ('V', 'FN', 'IF', 'TF', 'P')
 ", conn);
                 await Database.Logger.LogMessageAsync("Executing query to find dependency relationships.", SeverityLevel.Verbose);
                 using(var reader = cmd.ExecuteReader())
