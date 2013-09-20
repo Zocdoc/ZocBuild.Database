@@ -32,7 +32,7 @@ Select
 From sys.objects o
 	inner join sys.schemas s
 		on o.[schema_id] = s.[schema_id]
-Where o.[type] in ('V', 'FN', 'IF', 'P')
+Where o.[type] in ('V', 'FN', 'IF', 'TF', 'P')
 
 Union all
 
