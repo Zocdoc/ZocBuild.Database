@@ -131,20 +131,20 @@ Where
                     && !databaseObjectsToRebuild.Contains(s.Value))
                 {
                     databaseObjectsToRebuild.Add(s.Value);
-                    AddAllReferences(s.Value, dbState, databaseObjectsToRebuild);
+                    AddAllReferences(s.Value, dbState, databaseObjectsToRebuild, isBuildItem);
                 }
             }
             return databaseObjectsToRebuild;
         }
 
-        private static void AddAllReferences(TypedDatabaseObject objectToSearch, IDictionary<TypedDatabaseObject, GraphNode> dependencyGraph, ISet<TypedDatabaseObject> set)
+        private static void AddAllReferences(TypedDatabaseObject objectToSearch, IDictionary<TypedDatabaseObject, GraphNode> dependencyGraph, ISet<TypedDatabaseObject> set, Func<TypedDatabaseObject, bool> excludeFromSet)
         {
             var references = dependencyGraph[objectToSearch].ReferencedBy;
-            var toAdd = references.Where(x => !set.Contains(x));
+            var toAdd = references.Where(x => !set.Contains(x) && !excludeFromSet(x));
             foreach (var r in toAdd)
             {
                 set.Add(r);
-                AddAllReferences(r, dependencyGraph, set);
+                AddAllReferences(r, dependencyGraph, set, excludeFromSet);
             }
         }
 
