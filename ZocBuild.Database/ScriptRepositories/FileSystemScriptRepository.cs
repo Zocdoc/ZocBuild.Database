@@ -226,6 +226,10 @@ namespace ZocBuild.Database.ScriptRepositories
                     }
                 }
             }
+            catch (DirectoryNotFoundException)
+            {
+                return new ScriptFile(dbObject, GetDropScript(dbObject), sqlParser);
+            }
             catch (FileNotFoundException)
             {
                 return new ScriptFile(dbObject, GetDropScript(dbObject), sqlParser);
