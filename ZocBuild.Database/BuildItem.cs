@@ -115,7 +115,7 @@ namespace ZocBuild.Database
         /// <remarks>
         /// If an error was encountered with this item, this property will contain an instance of 
         /// <see cref="BuildErrorBase"/>.  It could be either a script error, dependency error, or 
-        /// and build error.  If no error was encountered, this property will be null.
+        /// a build error.  If no error was encountered, this property will be null.
         /// </remarks>
         public BuildErrorBase Error
         {
