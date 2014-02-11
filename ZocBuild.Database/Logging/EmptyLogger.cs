@@ -8,8 +8,11 @@ namespace ZocBuild.Database.Logging
 {
     public class EmptyLogger : ILogger
     {
-        public async Task LogMessageAsync(string message, SeverityLevel severity)
+        private static readonly Action NoOpAction = () => { };
+
+        public Task LogMessageAsync(string message, SeverityLevel severity)
         {
+            return new Task(NoOpAction);
         }
     }
 }
