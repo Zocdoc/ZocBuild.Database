@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
@@ -17,15 +18,13 @@ namespace ZocBuild.Database.Application.Settings
         public string ConnectionString { get; set; }
         public string ScriptsPath { get; set; }
 
-        public Database Create(FileInfo pathToGit, IParser sqlParser)
+        public Database Create(IDbConnection connection, IDbTransaction transaction, FileInfo pathToGit, IParser sqlParser)
         {
-            var connectionStr = ConnectionString;
-            Func<SqlConnection> connection = () => new SqlConnection(connectionStr);
             var repo = new GitScriptRepository(ScriptsPath, ServerName, DatabaseName, pathToGit, sqlParser, false);
-            return new Database(ServerName, DatabaseName, connection, repo);
+            return new Database(ServerName, DatabaseName, connection, transaction, repo);
         }
 
-        public bool IsSettingForDatabase(Database db)
+        public bool IsSettingForDatabase(DatabaseSetting db)
         {
             if(db == null)
             {
@@ -39,19 +38,15 @@ namespace ZocBuild.Database.Application.Settings
             {
                 return false;
             }
-            using(var conn = db.Connection())
-            {
-                if (!ConnectionString.Equals(conn.ConnectionString, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    return false;
-                }
-            }
-            var repo = db.Scripts as FileSystemScriptRepository;
-            if(repo == null)
+            if (!ConnectionString.Equals(db.ConnectionString, StringComparison.InvariantCultureIgnoreCase))
             {
                 return false;
             }
-            return (new DirectoryInfo(ScriptsPath)).FullName.Equals(repo.ScriptDirectory.FullName, StringComparison.InvariantCultureIgnoreCase);
+            if (!ConnectionString.Equals(db.ConnectionString, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return false;
+            }
+            return (new DirectoryInfo(ScriptsPath)).FullName.Equals((new DirectoryInfo(db.ScriptsPath)).FullName, StringComparison.InvariantCultureIgnoreCase);
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
+using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -52,7 +53,7 @@ namespace ZocBuild.Database.Application
                 sqlParser = null;
             }
 
-            var vm = new MainWindowViewModel(Properties.Settings.Default.Databases.Select(x => x.Create(pathToGit, sqlParser)));
+            var vm = new MainWindowViewModel(Properties.Settings.Default.Databases);
             vm.SourceChangeset = (DvcsScriptRepositoryBase.RevisionIdentifierBase)Properties.Settings.Default.LastChangeset ?? Properties.Settings.Default.LastTag;
             if (vm.SourceChangeset != null)
             {
@@ -66,7 +67,7 @@ namespace ZocBuild.Database.Application
 
         private void btAddDb_Click(object sender, RoutedEventArgs e)
         {
-            var w = new DatabaseWindow(pathToGit, sqlParser);
+            var w = new DatabaseWindow();
             w.DataContext = DataContext;
             w.ShowDialog();
         }
@@ -83,28 +84,42 @@ namespace ZocBuild.Database.Application
 
         private void btUpdate_Click(object sender, RoutedEventArgs e)
         {
-            var db = ((MainWindowViewModel)DataContext).SelectedDatabase;
-            var dvcsRepo = db.Scripts as DvcsScriptRepositoryBase;
-            if(dvcsRepo != null)
-            {
-                dvcsRepo.SourceChangeset = ((MainWindowViewModel)DataContext).SourceChangeset;
-                //dvcsRepo.DestinationChangeset = ((MainWindowViewModel)DataContext).DestinationChangeset;
-            }
+            var dbSetting = ((MainWindowViewModel)DataContext).SelectedDatabase;
+            var sourceChangeset = ((MainWindowViewModel)DataContext).SourceChangeset;
             ((MainWindowViewModel)DataContext).IsReady = false;
-            Task.Run(() => Update(db));
+            Task.Run(() => Update(dbSetting, sourceChangeset));
         }
 
         private void btBuild_Click(object sender, RoutedEventArgs e)
         {
             var items = ((MainWindowViewModel)DataContext).Items.Select(x => x.Item);
-            var db = ((MainWindowViewModel) DataContext).SelectedDatabase;
+            var dbSetting = ((MainWindowViewModel)DataContext).SelectedDatabase;
+            var sourceChangeset = ((MainWindowViewModel)DataContext).SourceChangeset;
             ((MainWindowViewModel) DataContext).IsReady = false;
-            Task.Run(() => Build(db, items));
+            Task.Run(() => Build(items, dbSetting, sourceChangeset));
         }
 
-        private async Task Update(Database db)
+        private async Task Update(DatabaseSetting dbSetting, DvcsScriptRepositoryBase.RevisionIdentifierBase sourceChangeset)
         {
-            var buildItems = await db.GetChangedBuildItemsAsync();
+            ICollection<BuildItem> buildItems;
+            using (var connection = new SqlConnection(dbSetting.ConnectionString))
+            {
+                await connection.OpenAsync();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    var db = dbSetting.Create(connection, transaction, pathToGit, sqlParser);
+
+                    var dvcsScriptRepo = db.Scripts as DvcsScriptRepositoryBase;
+                    if (dvcsScriptRepo != null)
+                    {
+                        dvcsScriptRepo.SourceChangeset = sourceChangeset;
+                    }
+
+                    buildItems = await db.GetChangedBuildItemsAsync();
+                    transaction.Commit();
+                }
+            }
+
             await Dispatcher.BeginInvoke((Action)(() =>
             {
                 ((MainWindowViewModel)DataContext).IsReady = true;
@@ -115,9 +130,28 @@ namespace ZocBuild.Database.Application
             }));
         }
 
-        private async Task Build(Database db, IEnumerable<BuildItem> items)
+        private async Task Build(IEnumerable<BuildItem> items, DatabaseSetting dbSetting, DvcsScriptRepositoryBase.RevisionIdentifierBase sourceChangeset)
         {
-            await db.BuildAsync(items);
+            using (var connection = new SqlConnection(dbSetting.ConnectionString))
+            {
+                await connection.OpenAsync();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    var db = dbSetting.Create(connection, transaction, pathToGit, sqlParser);
+
+                    var dvcsScriptRepo = db.Scripts as DvcsScriptRepositoryBase;
+                    if (dvcsScriptRepo != null)
+                    {
+                        dvcsScriptRepo.SourceChangeset = sourceChangeset;
+                    }
+
+                    if (await db.BuildAsync(items))
+                    {
+                        transaction.Commit();
+                    }
+                }
+            }
+
             await Dispatcher.BeginInvoke((Action) (() =>
                 {
                     ((MainWindowViewModel)DataContext).IsReady = true;

@@ -1,22 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ZocBuild.Database.Util;
 
 namespace ZocBuild.Database.Build
 {
-    class ScriptCreateExecutor : IScriptExecutor
+    internal class ScriptCreateExecutor : IScriptExecutor
     {
-        public ScriptCreateExecutor(SqlConnection connection, SqlTransaction transaction)
-        {
-            Connection = connection;
-            Transaction = transaction;
-        }
+        private readonly IDbConnection _connection;
+        private readonly IDbTransaction _transaction;
 
-        private SqlConnection Connection { get; set; }
-        private SqlTransaction Transaction { get; set; }
+        public ScriptCreateExecutor(IDbConnection connection, IDbTransaction transaction)
+        {
+            this._connection = connection;
+            this._transaction = transaction;
+        }
 
         public async Task ExecuteAsync(ScriptFile script, BuildItem.BuildActionType action)
         {
@@ -35,8 +37,13 @@ namespace ZocBuild.Database.Build
                 default:
                     throw new NotSupportedException(string.Format("Unable to execute a script for build action type {0}.", action));
             }
-            var cmd = new SqlCommand(cmdText, Connection, Transaction);
-            await cmd.ExecuteNonQueryAsync();
+
+            using (var cmd = _connection.CreateCommand())
+            {
+                cmd.CommandText = cmdText;
+                cmd.Transaction = _transaction;
+                await cmd.ExecuteNonQueryAsync();
+            }
         }
     }
 }

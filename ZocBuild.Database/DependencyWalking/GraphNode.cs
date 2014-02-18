@@ -7,7 +7,7 @@ using ZocBuild.Database.Util;
 
 namespace ZocBuild.Database.DependencyWalking
 {
-    class GraphNode
+    internal class GraphNode
     {
         public GraphNode(TypedDatabaseObject value)
         {
