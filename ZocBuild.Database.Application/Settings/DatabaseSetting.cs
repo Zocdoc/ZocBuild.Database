@@ -48,5 +48,10 @@ namespace ZocBuild.Database.Application.Settings
             }
             return (new DirectoryInfo(ScriptsPath)).FullName.Equals((new DirectoryInfo(db.ScriptsPath)).FullName, StringComparison.InvariantCultureIgnoreCase);
         }
+
+        public override string ToString()
+        {
+            return ServerName + "." + DatabaseName;
+        }
     }
 }
