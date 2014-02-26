@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Abstractions;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,23 +13,23 @@ namespace ZocBuild.Database.ScriptRepositories
     public class HgScriptRepository : DvcsScriptRepositoryBase
     {
         #region Constructors
-        public HgScriptRepository(string scriptDirectoryPath, string serverName, string databaseName, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
-            : base(scriptDirectoryPath, serverName, databaseName, sqlParser, ignoreUnsupportedSubdirectories)
+        public HgScriptRepository(string scriptDirectoryPath, string serverName, string databaseName, IFileSystem fileSystem, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
+            : base(scriptDirectoryPath, serverName, databaseName, fileSystem, sqlParser, ignoreUnsupportedSubdirectories)
         {
         }
 
-        public HgScriptRepository(DirectoryInfo scriptDirectory, string serverName, string databaseName, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
-            : base(scriptDirectory, serverName, databaseName, sqlParser, ignoreUnsupportedSubdirectories)
+        public HgScriptRepository(DirectoryInfoBase scriptDirectory, string serverName, string databaseName, IFileSystem fileSystem, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
+            : base(scriptDirectory, serverName, databaseName, fileSystem, sqlParser, ignoreUnsupportedSubdirectories)
         {
         }
         #endregion
         
-        protected override async Task<ICollection<FileInfo>> GetDiffedFilesAsync()
+        protected override async Task<ICollection<FileInfoBase>> GetDiffedFilesAsync()
         {
-            Func<FileInfo, bool> filter;
+            Func<FileInfoBase, bool> filter;
             if (IgnoreUnsupportedSubdirectories)
             {
-                filter = isFileInSupportedDirectory;
+                filter = IsFileInSupportedDirectory;
             }
             else
             {
@@ -46,11 +47,11 @@ namespace ZocBuild.Database.ScriptRepositories
                 statusProcess.StartInfo.Arguments = args;
                 statusProcess.StartInfo.WorkingDirectory = ScriptDirectory.FullName;
                 statusProcess.Start();
-                var result = new List<FileInfo>();
+                var result = new List<FileInfoBase>();
                 while (!statusProcess.StandardOutput.EndOfStream)
                 {
                     var line = await statusProcess.StandardOutput.ReadLineAsync();
-                    var file = new FileInfo(Path.Combine(ScriptDirectory.FullName, line));
+                    var file = FileSystem.FileInfo.FromFileName(Path.Combine(ScriptDirectory.FullName, line));
                     if (file.Extension.Equals(".sql", StringComparison.InvariantCultureIgnoreCase) && filter(file))
                     {
                         result.Add(file);

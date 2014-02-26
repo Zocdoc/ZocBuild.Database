@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Abstractions;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,10 +33,11 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <param name="serverName">The name of the database server.</param>
         /// <param name="databaseName">The name of the database.</param>
         /// <param name="gitExecutable">The Git executable for interfacing with the dvcs repository.</param>
+        /// <param name="fileSystem">An object that provides access to the file system.</param>
         /// <param name="sqlParser">The sql script parser for reading the SQL file contents.</param>
         /// <param name="ignoreUnsupportedSubdirectories">A flag indicating whether to ignore subdirectories that don't conform to the expected naming convention.</param>
-        public GitScriptRepository(string scriptDirectoryPath, string serverName, string databaseName, FileInfo gitExecutable, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
-            : base(scriptDirectoryPath, serverName, databaseName, sqlParser, ignoreUnsupportedSubdirectories)
+        public GitScriptRepository(string scriptDirectoryPath, string serverName, string databaseName, FileInfoBase gitExecutable, IFileSystem fileSystem, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
+            : base(scriptDirectoryPath, serverName, databaseName, fileSystem, sqlParser, ignoreUnsupportedSubdirectories)
         {
             GitExecutable = gitExecutable;
         }
@@ -47,10 +49,11 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <param name="serverName">The name of the database server.</param>
         /// <param name="databaseName">The name of the database.</param>
         /// <param name="gitExecutable">The Git executable for interfacing with the dvcs repository.</param>
+        /// <param name="fileSystem">An object that provides access to the file system.</param>
         /// <param name="sqlParser">The sql script parser for reading the SQL file contents.</param>
         /// <param name="ignoreUnsupportedSubdirectories">A flag indicating whether to ignore subdirectories that don't conform to the expected naming convention.</param>
-        public GitScriptRepository(DirectoryInfo scriptDirectory, string serverName, string databaseName, FileInfo gitExecutable, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
-            : base(scriptDirectory, serverName, databaseName, sqlParser, ignoreUnsupportedSubdirectories)
+        public GitScriptRepository(DirectoryInfoBase scriptDirectory, string serverName, string databaseName, FileInfoBase gitExecutable, IFileSystem fileSystem, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
+            : base(scriptDirectory, serverName, databaseName, fileSystem, sqlParser, ignoreUnsupportedSubdirectories)
         {
             GitExecutable = gitExecutable;
         }
@@ -62,7 +65,7 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <summary>
         /// Gets or sets the Git executable.
         /// </summary>
-        private FileInfo GitExecutable { get; set; }
+        private FileInfoBase GitExecutable { get; set; }
 
         #endregion
 
@@ -73,12 +76,12 @@ namespace ZocBuild.Database.ScriptRepositories
         /// and the current HEAD.
         /// </summary>
         /// <returns>A collection of files.</returns>
-        protected override async Task<ICollection<FileInfo>> GetDiffedFilesAsync()
+        protected override async Task<ICollection<FileInfoBase>> GetDiffedFilesAsync()
         {
-            Func<FileInfo, bool> filter;
+            Func<FileInfoBase, bool> filter;
             if (IgnoreUnsupportedSubdirectories)
             {
-                filter = isFileInSupportedDirectory;
+                filter = IsFileInSupportedDirectory;
             }
             else
             {
@@ -92,11 +95,11 @@ namespace ZocBuild.Database.ScriptRepositories
                 var statusProcess = CreateProcess(GitExecutable, "diff --name-only " + SourceChangeset.ToString() + " HEAD .", ScriptDirectory);
                 statusProcess.StartInfo.RedirectStandardOutput = true;
                 statusProcess.Start();
-                var result = new List<FileInfo>();
+                var result = new List<FileInfoBase>();
                 while (!statusProcess.StandardOutput.EndOfStream)
                 {
                     var line = await statusProcess.StandardOutput.ReadLineAsync();
-                    var file = new FileInfo(Path.Combine(repoPath, line));
+                    var file = FileSystem.FileInfo.FromFileName(Path.Combine(repoPath, line));
                     if (file.Extension.Equals(".sql", StringComparison.InvariantCultureIgnoreCase) && filter(file))
                     {
                         result.Add(file);

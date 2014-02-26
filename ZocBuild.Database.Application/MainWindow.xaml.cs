@@ -5,6 +5,7 @@ using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.Data.SqlClient;
 using System.IO;
+using System.IO.Abstractions;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -107,8 +108,9 @@ namespace ZocBuild.Database.Application
                 await connection.OpenAsync();
                 using (var transaction = connection.BeginTransaction())
                 {
+                    var fileSystem = new FileSystem();
                     var db = dbSetting.Create(connection, transaction);
-                    var dvcsScriptRepo = new GitScriptRepository(dbSetting.ScriptsPath, dbSetting.ServerName, dbSetting.DatabaseName, pathToGit, sqlParser, false);
+                    var dvcsScriptRepo = new GitScriptRepository(dbSetting.ScriptsPath, dbSetting.ServerName, dbSetting.DatabaseName, pathToGit, fileSystem, sqlParser, false);
                     dvcsScriptRepo.SourceChangeset = sourceChangeset;
 
                     buildItems = await db.GetChangedBuildItemsAsync(dvcsScriptRepo);
