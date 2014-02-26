@@ -39,8 +39,8 @@ namespace ZocBuild.Database
             Drop
         }
 
-        private BuildStatusType status;
-        private BuildErrorBase error;
+        private BuildStatusType _status;
+        private BuildErrorBase _error;
 
         /// <summary>
         /// Instantiates a BuildItem with the given build script.
@@ -55,7 +55,7 @@ namespace ZocBuild.Database
             Dependencies = dependencies;
             Referencers = referencers;
             DependencyDepth = FindDependencyDepth(Referencers, 0);
-            status = script.ScriptError != null ? script.ScriptError.Status : BuildStatusType.None;
+            _status = script.ScriptError != null ? script.ScriptError.Status : BuildStatusType.None;
 
             if (script.Sql != null && script.Sql.ScriptAction == ScriptActionType.Drop)
             {
@@ -106,7 +106,7 @@ namespace ZocBuild.Database
         /// </remarks>
         public BuildStatusType Status
         {
-            get { return status; }
+            get { return _status; }
         }
 
         /// <summary>
@@ -121,7 +121,7 @@ namespace ZocBuild.Database
         {
             get
             {
-                return error ?? Script.ScriptError;
+                return _error ?? Script.ScriptError;
             }
         }
 
@@ -156,13 +156,13 @@ namespace ZocBuild.Database
         /// <param name="error">The error state of the build item.</param>
         internal void ReportError(BuildErrorBase error)
         {
-            var oldStatus = status;
-            this.status = error.Status;
-            this.error = error;
+            var oldStatus = _status;
+            this._status = error.Status;
+            this._error = error;
 
             if (StatusChanged != null)
             {
-                StatusChanged(this, new BuildStatusEventArgs(this.status, oldStatus));
+                StatusChanged(this, new BuildStatusEventArgs(this._status, oldStatus));
             }
         }
 
@@ -174,12 +174,12 @@ namespace ZocBuild.Database
         /// </remarks>
         internal void ReportSuccess()
         {
-            var oldStatus = status;
-            this.status = BuildStatusType.Success;
+            var oldStatus = _status;
+            this._status = BuildStatusType.Success;
 
             if (StatusChanged != null)
             {
-                StatusChanged(this, new BuildStatusEventArgs(this.status, oldStatus));
+                StatusChanged(this, new BuildStatusEventArgs(this._status, oldStatus));
             }
         }
 

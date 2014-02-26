@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
@@ -13,8 +14,22 @@ using ZocBuild.Database.Util;
 
 namespace ZocBuild.Database.Build
 {
-    class Build
+    internal class Build
     {
+        private readonly IDbConnection _connection;
+        private readonly IDbTransaction _transaction;
+
+        /// <summary>
+        /// Instantiates a build object which can execute object definition scripts.
+        /// </summary>
+        /// <param name="connection">The open connection to the database.</param>
+        /// <param name="transaction">The open transaction on which the scripts should be executed.</param>
+        public Build(IDbConnection connection, IDbTransaction transaction)
+        {
+            this._connection = connection;
+            this._transaction = transaction;
+        }
+
         /// <summary>
         /// Builds the given items on the database.
         /// </summary>
@@ -25,17 +40,18 @@ namespace ZocBuild.Database.Build
         /// If any one script fails to build, the entire transaction will be rolled back.
         /// </remarks>
         /// <param name="items">The items to build.</param>
-        /// <param name="connection">The open connection to the database.</param>
-        /// <param name="transaction">The open transaction on which the scripts should be executed.</param>
         /// <returns>A flag that indicates whether all scripts were executed successfully.</returns>
-        public async Task<bool> BuildItemsAsync(IEnumerable<BuildItem> items, SqlConnection connection, SqlTransaction transaction)
+        public async Task<bool> BuildItemsAsync(IEnumerable<BuildItem> items)
         {
-            await DropAsync(items, connection, transaction);
-            await CreateAsync(items, connection, transaction);
+            await DropAsync(items);
+            await CreateAsync(items);
 
             if (items.Any(x => x.Error != null))
             {
-                transaction.Rollback();
+                if (_transaction != null)
+                {
+                    _transaction.Rollback();
+                }
                 return false;
             }
             else
@@ -44,7 +60,7 @@ namespace ZocBuild.Database.Build
             }
         }
 
-        private async Task DropAsync(IEnumerable<BuildItem> items, SqlConnection connection, SqlTransaction transaction)
+        private async Task DropAsync(IEnumerable<BuildItem> items)
         {
             var scriptsToReferencers = items.ToDictionary(x => x, y => y.Referencers.ToList());
             Action<BuildItem> onSuccess = i => { };
@@ -56,11 +72,11 @@ namespace ZocBuild.Database.Build
                 // Set status of referencers
                 DependencyError.SetDependencyErrorStatus(i.Referencers, Enumerable.Repeat(i, 1));
             };
-            await ApplyScriptsAsync(scriptsToReferencers, new ScriptDropExecutor(connection, transaction),
+            await ApplyScriptsAsync(scriptsToReferencers, new ScriptDropExecutor(_connection, _transaction),
                 x => x.Dependencies, y => true, onSuccess, onFailure);
         }
 
-        private async Task CreateAsync(IEnumerable<BuildItem> items, SqlConnection connection, SqlTransaction transaction)
+        private async Task CreateAsync(IEnumerable<BuildItem> items)
         {
             var scriptsToDependencies = items.ToDictionary(x => x, y => y.Dependencies.ToList());
             Action<BuildItem> onSuccess = i => i.ReportSuccess();
@@ -72,7 +88,7 @@ namespace ZocBuild.Database.Build
                     // Set status of referencers
                     DependencyError.SetDependencyErrorStatus(i.Referencers, Enumerable.Repeat(i, 1));
                 };
-            await ApplyScriptsAsync(scriptsToDependencies, new ScriptCreateExecutor(connection, transaction),
+            await ApplyScriptsAsync(scriptsToDependencies, new ScriptCreateExecutor(_connection, _transaction),
                 x => x.Referencers, y => y.Status == BuildItem.BuildStatusType.None, onSuccess, onFailure);
         }
 

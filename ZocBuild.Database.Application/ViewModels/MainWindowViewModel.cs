@@ -7,13 +7,14 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
+using ZocBuild.Database.Application.Settings;
 using ZocBuild.Database.ScriptRepositories;
 
 namespace ZocBuild.Database.Application.ViewModels
 {
     class MainWindowViewModel : INotifyPropertyChanged
     {
-        private Database selectedDatabase;
+        private DatabaseSetting selectedDatabase;
         private DvcsScriptRepositoryBase.RevisionIdentifierBase sourceChangeset;
         private string selectedSourceType;
         //private DvcsScriptRepositoryBase.ChangesetId destinationChangeset;
@@ -21,15 +22,15 @@ namespace ZocBuild.Database.Application.ViewModels
         private bool isReady;
         private bool isDone;
 
-        public MainWindowViewModel(IEnumerable<Database> databases)
+        public MainWindowViewModel(IEnumerable<DatabaseSetting> databases)
         {
-            Databases = new ObservableCollection<Database>(databases);
+            Databases = new ObservableCollection<DatabaseSetting>(databases);
             SelectedDatabase = Databases.FirstOrDefault();
             isReady = true;
         }
 
-        public ObservableCollection<Database> Databases { get; private set; }
-        public Database SelectedDatabase
+        public ObservableCollection<DatabaseSetting> Databases { get; private set; }
+        public DatabaseSetting SelectedDatabase
         {
             get { return selectedDatabase; }
             set

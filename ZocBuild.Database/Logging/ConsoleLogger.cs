@@ -8,28 +8,28 @@ namespace ZocBuild.Database.Logging
 {
     public class ConsoleLogger : ILogger
     {
-        private readonly SeverityLevel minSeverity;
-        private readonly string header;
+        private readonly SeverityLevel _minSeverity;
+        private readonly string _header;
 
         public ConsoleLogger(SeverityLevel minSeverity)
         {
-            this.header = string.Empty;
-            this.minSeverity = minSeverity;
+            this._header = string.Empty;
+            this._minSeverity = minSeverity;
         }
 
         public ConsoleLogger(string header, SeverityLevel minSeverity)
         {
-            this.header = header + ": ";
-            this.minSeverity = minSeverity;
+            this._header = header + ": ";
+            this._minSeverity = minSeverity;
         }
 
         public async Task LogMessageAsync(string message, SeverityLevel severity)
         {
-            if (severity < minSeverity)
+            if (severity < _minSeverity)
             {
                 return;
             }
-            await Console.Out.WriteAsync(header);
+            await Console.Out.WriteAsync(_header);
             await Console.Out.WriteAsync(GetSeverityString(severity));
             await Console.Out.WriteLineAsync(message);
         }

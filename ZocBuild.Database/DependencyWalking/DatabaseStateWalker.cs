@@ -4,117 +4,43 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ZocBuild.Database.DatabaseState;
 using ZocBuild.Database.Logging;
 using ZocBuild.Database.Util;
 
 namespace ZocBuild.Database.DependencyWalking
 {
-    class DatabaseStateWalker
+    internal class DatabaseStateWalker
     {
-        public DatabaseStateWalker(Database database)
+        private readonly string _serverName;
+        private readonly string _databaseName;
+
+        public DatabaseStateWalker(string serverName, string databaseName)
         {
-            Database = database;
+            _serverName = serverName;
+            _databaseName = databaseName;
         }
 
-        public Database Database { get; private set; } 
-
-        public async Task<IDictionary<TypedDatabaseObject, GraphNode>> WalkDependenciesAsync()
+        public IDictionary<TypedDatabaseObject, GraphNode> WalkDependencies(IEnumerable<DependencyRecord> dependencies)
         {
             Dictionary<TypedDatabaseObject, GraphNode> objects = new Dictionary<TypedDatabaseObject, GraphNode>(new TypedDatabaseObjectComparer());
-            using (var conn = Database.Connection())
+
+            foreach (var record in dependencies)
             {
-                await Database.Logger.LogMessageAsync("Opening connection to database " + conn.Database + " to collect dependency relationships.", SeverityLevel.Verbose);
-                conn.Open();
-                SqlCommand cmd = new SqlCommand(@"
-Select
-	ISNULL(o.name, t.name) as objectName,
-	s.name as schemaName,
-	Case
-		When sed.referencing_class = 6 Then 'TT'
-		Else o.[type]
-	End as objectType,
-	sed.referenced_entity_name as dependencyName,
-	ISNULL(sed.referenced_schema_name, 'dbo') as dependencySchemaName,
-	Case
-		When sed.referenced_class = 6 Then 'TT'
-		Else dep.[type]
-	End as dependencyType
-From sys.sql_expression_dependencies sed
-	left outer join sys.objects o
-		on sed.referencing_id = o.[object_id]
-		and sed.referencing_class <> 6
-		and o.[type] in ('V', 'FN', 'IF', 'TF', 'P')
-	left outer join sys.types t
-		on sed.referencing_id = t.user_type_id
-		and sed.referencing_class = 6
-		and t.is_user_defined = 1
-	inner join sys.schemas s
-		on ISNULL(o.[schema_id], t.[schema_id]) = s.[schema_id]
-	left join sys.objects dep
-		on sed.referenced_id = dep.[object_id]
-		and sed.referenced_class <> 6
-		and dep.[type] in ('V', 'FN', 'IF', 'TF', 'P')
-Where
-	ISNULL(o.name, t.name) is not null
-	and (
-		sed.referenced_class = 6
-		or dep.[type] is not null
-	)
-	and ISNULL(sed.referenced_database_name, DB_NAME()) = DB_NAME()
-	and ISNULL(sed.referenced_server_name, @@SERVERNAME) = @@SERVERNAME
-
-Union
-
-Select
-	o.name as objectName,
-	s.name as schemaName,
-	o.[type] as objectType,
-	dep.name as dependencyName,
-	deps.name as dependencySchemaName,
-	dep.[type] as dependencyType
-From sys.sql_dependencies sd
-	inner join sys.objects o
-		on sd.[object_id] = o.[object_id]
-	inner join sys.schemas s
-		on o.[schema_id] = s.[schema_id]
-	inner join sys.objects dep
-		on sd.referenced_major_id = dep.[object_id]
-	inner join sys.schemas deps
-		on dep.[schema_id] = deps.[schema_id]
-Where
-	o.[type] in ('V', 'FN', 'IF', 'TF', 'P')
-	and dep.[type] in ('V', 'FN', 'IF', 'TF', 'P')
-", conn);
-                await Database.Logger.LogMessageAsync("Executing query to find dependency relationships.", SeverityLevel.Verbose);
-                using(var reader = cmd.ExecuteReader())
+                var dependant = record.GetObject(_serverName, _databaseName);
+                var dependency = record.GetDependency(_serverName, _databaseName);
+                if (!objects.ContainsKey(dependant))
                 {
-                    while(reader.Read())
-                    {
-                        var record = new DependencyRecord()
-                        {
-                            ObjectName = reader["objectName"] as string,
-                            SchemaName = reader["schemaName"] as string,
-                            Type = reader["objectType"] as string,
-                            DependencyName = reader["dependencyName"] as string,
-                            DependencySchemaName = reader["dependencySchemaName"] as string,
-                            DependencyType = reader["dependencyType"] as string
-                        };
-                        var dependant = record.GetObject(Database.ServerName, Database.DatabaseName);
-                        var dependency = record.GetDependency(Database.ServerName, Database.DatabaseName);
-                        if(!objects.ContainsKey(dependant))
-                        {
-                            objects.Add(dependant, new GraphNode(dependant));
-                        }
-                        if(!objects.ContainsKey(dependency))
-                        {
-                            objects.Add(dependency, new GraphNode(dependency));
-                        }
-                        objects[dependant].Dependencies.Add(dependency);
-                        objects[dependency].ReferencedBy.Add(dependant);
-                    }
+                    objects.Add(dependant, new GraphNode(dependant));
                 }
+                if (!objects.ContainsKey(dependency))
+                {
+                    objects.Add(dependency, new GraphNode(dependency));
+                }
+                objects[dependant].Dependencies.Add(dependency);
+                objects[dependency].ReferencedBy.Add(dependant);
             }
-            await Database.Logger.LogMessageAsync("Found " + objects.Count + " objects with dependency relationships in the database's current state.", SeverityLevel.Verbose);
+
             return objects;
         }
 
@@ -145,26 +71,6 @@ Where
             {
                 set.Add(r);
                 AddAllReferences(r, dependencyGraph, set, excludeFromSet);
-            }
-        }
-
-        private class DependencyRecord
-        {
-            public string ObjectName { get; set; }
-            public string SchemaName { get; set; }
-            public string Type { get; set; }
-            public string DependencyName { get; set; }
-            public string DependencySchemaName { get; set; }
-            public string DependencyType { get; set; }
-
-            public TypedDatabaseObject GetObject(string serverName, string databaseName)
-            {
-                return new TypedDatabaseObject(serverName, databaseName, SchemaName, ObjectName, DatabaseIdentifierUtility.GetObjectTypeFromString(Type));
-            }
-
-            public TypedDatabaseObject GetDependency(string serverName, string databaseName)
-            {
-                return new TypedDatabaseObject(serverName, databaseName, DependencySchemaName, DependencyName, DatabaseIdentifierUtility.GetObjectTypeFromString(DependencyType));
             }
         }
     }

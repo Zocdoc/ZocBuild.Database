@@ -7,7 +7,7 @@ using ZocBuild.Database.Util;
 
 namespace ZocBuild.Database.DependencyWalking
 {
-    class ScriptFileWalking
+    internal class ScriptFileWalking
     {
         public IDictionary<ScriptFile, ISet<DatabaseObject>> GetDependencies(IEnumerable<ScriptFile> scripts)
         {

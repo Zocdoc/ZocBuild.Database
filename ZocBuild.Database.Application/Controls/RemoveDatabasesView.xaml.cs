@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using ZocBuild.Database.Application.Settings;
 using ZocBuild.Database.Application.ViewModels;
 
 namespace ZocBuild.Database.Application.Controls
@@ -39,7 +40,7 @@ namespace ZocBuild.Database.Application.Controls
         private void btDelete_Click(object sender, RoutedEventArgs e)
         {
             var vm = DataContext as MainWindowViewModel;
-            var db = ((Button) sender).DataContext as Database;
+            var db = ((Button) sender).DataContext as DatabaseSetting;
             if(vm != null && db != null)
             {
                 if(vm.SelectedDatabase == db)

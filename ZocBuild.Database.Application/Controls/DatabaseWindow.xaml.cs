@@ -22,22 +22,16 @@ namespace ZocBuild.Database.Application.Controls
     /// </summary>
     public partial class DatabaseWindow : Window
     {
-        private readonly FileInfo pathToGit;
-        private readonly IParser sqlParser;
-
-        public DatabaseWindow(FileInfo pathToGit, IParser sqlParser)
+        public DatabaseWindow()
         {
-            this.pathToGit = pathToGit;
-            this.sqlParser = sqlParser;
             InitializeComponent();
         }
 
         private void add_DatabaseAdded(object sender, EventArgs e)
         {
             var dbSetting = add.Result;
-            var db = dbSetting.Create(pathToGit, sqlParser);
-            ((MainWindowViewModel)DataContext).Databases.Add(db);
-            ((MainWindowViewModel) DataContext).SelectedDatabase = db;
+            ((MainWindowViewModel)DataContext).Databases.Add(dbSetting);
+            ((MainWindowViewModel)DataContext).SelectedDatabase = dbSetting;
             Properties.Settings.Default.Databases.Add(dbSetting);
             Properties.Settings.Default.Save();
             DialogResult = true;

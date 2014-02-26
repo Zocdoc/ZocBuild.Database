@@ -48,12 +48,14 @@
   <ItemGroup>
     <Compile Include="BuildItem.cs" />
     <Compile Include="Build\Build.cs" />
-    <Compile Include="Build\DatabaseManager.cs" />
+    <Compile Include="DatabaseState\DependencyRecord.cs" />
+    <Compile Include="DatabaseState\ObjectDefinitionFetcher.cs" />
     <Compile Include="Build\IScriptExecutor.cs" />
     <Compile Include="Build\ScriptCreateExecutor.cs" />
     <Compile Include="Build\ScriptDropExecutor.cs" />
     <Compile Include="Database.cs" />
     <Compile Include="DatabaseObject.cs" />
+    <Compile Include="DatabaseState\ObjectDependencyFetcher.cs" />
     <Compile Include="DependencyWalking\DatabaseStateWalker.cs" />
     <Compile Include="DependencyWalking\GraphNode.cs" />
     <Compile Include="DependencyWalking\ScriptFileWalking.cs" />
@@ -91,6 +93,9 @@
     <Compile Include="Util\DatabaseObjectComparer.cs" />
     <Compile Include="Util\DatabaseObjectExtensions.cs" />
     <Compile Include="Util\DotNetCompatibilityExtensions.cs" />
+    <Compile Include="Util\DataReaderExtensions.cs" />
+    <Compile Include="Util\DbCommandExtensions.cs" />
+    <Compile Include="Util\DbConnectionExtensions.cs" />
     <Compile Include="Util\ObjectNameTrimmer.cs" />
   </ItemGroup>
   <ItemGroup>
