@@ -107,15 +107,11 @@ namespace ZocBuild.Database.Application
                 await connection.OpenAsync();
                 using (var transaction = connection.BeginTransaction())
                 {
-                    var db = dbSetting.Create(connection, transaction, pathToGit, sqlParser);
+                    var db = dbSetting.Create(connection, transaction);
+                    var dvcsScriptRepo = new GitScriptRepository(dbSetting.ScriptsPath, dbSetting.ServerName, dbSetting.DatabaseName, pathToGit, sqlParser, false);
+                    dvcsScriptRepo.SourceChangeset = sourceChangeset;
 
-                    var dvcsScriptRepo = db.Scripts as DvcsScriptRepositoryBase;
-                    if (dvcsScriptRepo != null)
-                    {
-                        dvcsScriptRepo.SourceChangeset = sourceChangeset;
-                    }
-
-                    buildItems = await db.GetChangedBuildItemsAsync();
+                    buildItems = await db.GetChangedBuildItemsAsync(dvcsScriptRepo);
                     transaction.Commit();
                 }
             }
@@ -137,14 +133,8 @@ namespace ZocBuild.Database.Application
                 await connection.OpenAsync();
                 using (var transaction = connection.BeginTransaction())
                 {
-                    var db = dbSetting.Create(connection, transaction, pathToGit, sqlParser);
-
-                    var dvcsScriptRepo = db.Scripts as DvcsScriptRepositoryBase;
-                    if (dvcsScriptRepo != null)
-                    {
-                        dvcsScriptRepo.SourceChangeset = sourceChangeset;
-                    }
-
+                    var db = dbSetting.Create(connection, transaction);
+                    
                     if (await db.BuildAsync(items))
                     {
                         transaction.Commit();
