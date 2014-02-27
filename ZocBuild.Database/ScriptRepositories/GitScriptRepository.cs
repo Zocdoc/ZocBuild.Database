@@ -36,7 +36,7 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <param name="fileSystem">An object that provides access to the file system.</param>
         /// <param name="sqlParser">The sql script parser for reading the SQL file contents.</param>
         /// <param name="ignoreUnsupportedSubdirectories">A flag indicating whether to ignore subdirectories that don't conform to the expected naming convention.</param>
-        public GitScriptRepository(string scriptDirectoryPath, string serverName, string databaseName, FileInfoBase gitExecutable, IFileSystem fileSystem, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
+        public GitScriptRepository(string scriptDirectoryPath, string serverName, string databaseName, IExternalProcess gitExecutable, IFileSystem fileSystem, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
             : base(scriptDirectoryPath, serverName, databaseName, fileSystem, sqlParser, ignoreUnsupportedSubdirectories)
         {
             GitExecutable = gitExecutable;
@@ -52,7 +52,7 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <param name="fileSystem">An object that provides access to the file system.</param>
         /// <param name="sqlParser">The sql script parser for reading the SQL file contents.</param>
         /// <param name="ignoreUnsupportedSubdirectories">A flag indicating whether to ignore subdirectories that don't conform to the expected naming convention.</param>
-        public GitScriptRepository(DirectoryInfoBase scriptDirectory, string serverName, string databaseName, FileInfoBase gitExecutable, IFileSystem fileSystem, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
+        public GitScriptRepository(DirectoryInfoBase scriptDirectory, string serverName, string databaseName, IExternalProcess gitExecutable, IFileSystem fileSystem, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
             : base(scriptDirectory, serverName, databaseName, fileSystem, sqlParser, ignoreUnsupportedSubdirectories)
         {
             GitExecutable = gitExecutable;
@@ -65,7 +65,7 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <summary>
         /// Gets or sets the Git executable.
         /// </summary>
-        private FileInfoBase GitExecutable { get; set; }
+        private IExternalProcess GitExecutable { get; set; }
 
         #endregion
 
@@ -92,21 +92,18 @@ namespace ZocBuild.Database.ScriptRepositories
             {
                 string repoPath = await GetRepositoryPath();
 
-                var statusProcess = CreateProcess(GitExecutable, "diff --name-only " + SourceChangeset.ToString() + " HEAD .", ScriptDirectory);
-                statusProcess.StartInfo.RedirectStandardOutput = true;
-                statusProcess.Start();
-                var result = new List<FileInfoBase>();
-                while (!statusProcess.StandardOutput.EndOfStream)
+                string fileListString = await GitExecutable.ExecuteAsync("diff --name-only " + SourceChangeset.ToString() + " HEAD .", ScriptDirectory.FullName);
+                string[] fileList = fileListString.Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+
+                var result = new List<FileInfoBase>(fileList.Length);
+                foreach(var line in fileList)
                 {
-                    var line = await statusProcess.StandardOutput.ReadLineAsync();
                     var file = FileSystem.FileInfo.FromFileName(Path.Combine(repoPath, line));
                     if (file.Extension.Equals(".sql", StringComparison.InvariantCultureIgnoreCase) && filter(file))
                     {
                         result.Add(file);
                     }
                 }
-                // TODO: make async
-                statusProcess.WaitForExit();
                 return result;
             }
             else
@@ -125,63 +122,8 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <returns>An absolute path on disk.</returns>
         private async Task<string> GetRepositoryPath()
         {
-            var pathProcess = CreateProcess(GitExecutable, "rev-parse --show-toplevel", ScriptDirectory);
-            pathProcess.StartInfo.RedirectStandardOutput = true;
-            pathProcess.Start();
-            string path = await pathProcess.StandardOutput.ReadLineAsync();
-            await WaitForProcessExitAsync(pathProcess);
-            return path;
-        }
-
-        /// <summary>
-        /// Pulls the local Git repository to the origin's latest revision.
-        /// </summary>
-        public async Task UpdateToLatest()
-        {
-            var updateProcess = CreateProcess(GitExecutable, "pull origin", ScriptDirectory);
-            updateProcess.Start();
-            await WaitForProcessExitAsync(updateProcess);
-        }
-
-        /// <summary>
-        /// Checks out the local Git repository to the given revision.
-        /// </summary>
-        /// <remarks>
-        /// To guarantee that the given revision is available, this method will first fetch from the origin.
-        /// </remarks>
-        /// <param name="branch">The revision to checkout.</param>
-        public async Task UpdateToChangeset(RevisionIdentifierBase branch)
-        {
-            var updateProcess = CreateProcess(GitExecutable, "fetch origin", ScriptDirectory);
-            updateProcess.Start();
-            await WaitForProcessExitAsync(updateProcess);
-
-            updateProcess = CreateProcess(GitExecutable, "checkout " + branch.ToString(), ScriptDirectory);
-            updateProcess.Start();
-            await WaitForProcessExitAsync(updateProcess);
-        }
-        
-        /// <summary>
-        /// Uses SSH to authenticate to the origin repository.
-        /// </summary>
-        /// <param name="sshExecutable">The SSH executable.</param>
-        /// <param name="userName">The Git username.</param>
-        /// <param name="userEmail">The Git user email.</param>
-        public async Task AuthenticateAsync(FileInfo sshExecutable, string userName, string userEmail)
-        {
-            Environment.SetEnvironmentVariable("HOME", Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location));
-
-            var authProcess = CreateProcess(sshExecutable, "-T -o StrictHostKeyChecking=no git@github.com", ScriptDirectory);
-            authProcess.Start();
-            await WaitForProcessExitAsync(authProcess);
-
-            authProcess = CreateProcess(GitExecutable, "config --global user.email \"" + userEmail + "\"", ScriptDirectory);
-            authProcess.Start();
-            await WaitForProcessExitAsync(authProcess);
-
-            authProcess = CreateProcess(GitExecutable, "config --global user.name \"" + userName + "\"", ScriptDirectory);
-            authProcess.Start();
-            await WaitForProcessExitAsync(authProcess);
+            string path = await GitExecutable.ExecuteAsync("rev-parse --show-toplevel", ScriptDirectory.FullName);
+            return path.Trim();
         }
 
         #endregion

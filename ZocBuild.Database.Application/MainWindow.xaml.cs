@@ -110,7 +110,8 @@ namespace ZocBuild.Database.Application
                 {
                     var fileSystem = new FileSystem();
                     var db = dbSetting.Create(connection, transaction);
-                    var dvcsScriptRepo = new GitScriptRepository(dbSetting.ScriptsPath, dbSetting.ServerName, dbSetting.DatabaseName, pathToGit, fileSystem, sqlParser, false);
+                    var gitProcess = new ExternalProcess(pathToGit.FullName);
+                    var dvcsScriptRepo = new GitScriptRepository(dbSetting.ScriptsPath, dbSetting.ServerName, dbSetting.DatabaseName, gitProcess, fileSystem, sqlParser, false);
                     dvcsScriptRepo.SourceChangeset = sourceChangeset;
 
                     buildItems = await db.GetChangedBuildItemsAsync(dvcsScriptRepo);

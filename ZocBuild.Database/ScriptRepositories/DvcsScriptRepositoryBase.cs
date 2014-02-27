@@ -232,17 +232,5 @@ namespace ZocBuild.Database.ScriptRepositories
         }
 
         #endregion
-
-        protected static Process CreateProcess(FileInfoBase executable, string arguments, DirectoryInfoBase workingDirectory)
-        {
-            var p = new Process();
-            p.StartInfo.UseShellExecute = false;
-            p.StartInfo.CreateNoWindow = true;
-            p.StartInfo.RedirectStandardOutput = true;
-            p.StartInfo.WorkingDirectory = workingDirectory.FullName;
-            p.StartInfo.FileName = executable.FullName;
-            p.StartInfo.Arguments = arguments;
-            return p;
-        }
     }
 }
