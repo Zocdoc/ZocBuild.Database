@@ -123,16 +123,6 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <returns>A collection of files.</returns>
         protected abstract Task<ICollection<FileInfoBase>> GetDiffedFilesAsync();
 
-        /// <summary>
-        /// Awaits until the given process exits.
-        /// </summary>
-        /// <param name="p">The process to wait.</param>
-        protected async Task WaitForProcessExitAsync(Process p)
-        {
-            // TODO: make async
-            p.WaitForExit();
-        }
-
         #endregion
 
         #region Revision Identifiers
