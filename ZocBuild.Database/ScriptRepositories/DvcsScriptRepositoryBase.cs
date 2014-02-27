@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
+using System.IO.Abstractions;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,10 +32,11 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <param name="scriptDirectoryPath">The path to the directory where build scripts are located.</param>
         /// <param name="serverName">The name of the database server.</param>
         /// <param name="databaseName">The name of the database.</param>
+        /// <param name="fileSystem">An object that provides access to the file system.</param>
         /// <param name="sqlParser">The sql script parser for reading the SQL file contents.</param>
         /// <param name="ignoreUnsupportedSubdirectories">A flag indicating whether to ignore subdirectories that don't conform to the expected naming convention.</param>
-        protected DvcsScriptRepositoryBase(string scriptDirectoryPath, string serverName, string databaseName, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
-            : base(scriptDirectoryPath, serverName, databaseName, sqlParser, ignoreUnsupportedSubdirectories)
+        protected DvcsScriptRepositoryBase(string scriptDirectoryPath, string serverName, string databaseName, IFileSystem fileSystem, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
+            : base(scriptDirectoryPath, serverName, databaseName, fileSystem, sqlParser, ignoreUnsupportedSubdirectories)
         {
         }
 
@@ -45,10 +46,11 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <param name="scriptDirectory">The directory where build scripts are located.</param>
         /// <param name="serverName">The name of the database server.</param>
         /// <param name="databaseName">The name of the database.</param>
+        /// <param name="fileSystem">An object that provides access to the file system.</param>
         /// <param name="sqlParser">The sql script parser for reading the SQL file contents.</param>
         /// <param name="ignoreUnsupportedSubdirectories">A flag indicating whether to ignore subdirectories that don't conform to the expected naming convention.</param>
-        protected DvcsScriptRepositoryBase(DirectoryInfo scriptDirectory, string serverName, string databaseName, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
-            : base(scriptDirectory, serverName, databaseName, sqlParser, ignoreUnsupportedSubdirectories)
+        protected DvcsScriptRepositoryBase(DirectoryInfoBase scriptDirectory, string serverName, string databaseName, IFileSystem fileSystem, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
+            : base(scriptDirectory, serverName, databaseName, fileSystem, sqlParser, ignoreUnsupportedSubdirectories)
         {
         }
 
@@ -119,7 +121,7 @@ namespace ZocBuild.Database.ScriptRepositories
         /// and the current HEAD.
         /// </summary>
         /// <returns>A collection of files.</returns>
-        protected abstract Task<ICollection<FileInfo>> GetDiffedFilesAsync();
+        protected abstract Task<ICollection<FileInfoBase>> GetDiffedFilesAsync();
 
         /// <summary>
         /// Awaits until the given process exits.
@@ -229,17 +231,5 @@ namespace ZocBuild.Database.ScriptRepositories
         }
 
         #endregion
-
-        protected static Process CreateProcess(FileInfo executable, string arguments, DirectoryInfo workingDirectory)
-        {
-            var p = new Process();
-            p.StartInfo.UseShellExecute = false;
-            p.StartInfo.CreateNoWindow = true;
-            p.StartInfo.RedirectStandardOutput = true;
-            p.StartInfo.WorkingDirectory = workingDirectory.FullName;
-            p.StartInfo.FileName = executable.FullName;
-            p.StartInfo.Arguments = arguments;
-            return p;
-        }
     }
 }

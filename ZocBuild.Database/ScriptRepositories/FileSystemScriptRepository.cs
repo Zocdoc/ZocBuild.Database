@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Abstractions;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,9 +25,10 @@ namespace ZocBuild.Database.ScriptRepositories
     /// </remarks>
     public class FileSystemScriptRepository : IScriptRepository
     {
-        private readonly Dictionary<string, DatabaseObjectType> objectTypes;
-        private readonly IParser sqlParser;
-        protected readonly Func<FileInfo, bool> isFileInSupportedDirectory;
+        private readonly Dictionary<string, DatabaseObjectType> _objectTypes;
+        private readonly IParser _sqlParser;
+        protected readonly IFileSystem FileSystem;
+        protected readonly Func<FileInfoBase, bool> IsFileInSupportedDirectory;
 
         #region Constructors
 
@@ -36,10 +38,11 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <param name="scriptDirectoryPath">The path to the directory where build scripts are located.</param>
         /// <param name="serverName">The name of the database server.</param>
         /// <param name="databaseName">The name of the database.</param>
+        /// <param name="fileSystem">An object that provides access to the file system.</param>
         /// <param name="sqlParser">The sql script parser for reading the SQL file contents.</param>
         /// <param name="ignoreUnsupportedSubdirectories">A flag indicating whether to ignore subdirectories that don't conform to the expected naming convention.</param>
-        public FileSystemScriptRepository(string scriptDirectoryPath, string serverName, string databaseName, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
-            : this(new DirectoryInfo(scriptDirectoryPath), serverName, databaseName, sqlParser, ignoreUnsupportedSubdirectories)
+        public FileSystemScriptRepository(string scriptDirectoryPath, string serverName, string databaseName, IFileSystem fileSystem, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
+            : this(fileSystem.DirectoryInfo.FromDirectoryName(scriptDirectoryPath), serverName, databaseName, fileSystem, sqlParser, ignoreUnsupportedSubdirectories)
         {
         }
 
@@ -49,18 +52,20 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <param name="scriptDirectory">The directory where build scripts are located.</param>
         /// <param name="serverName">The name of the database server.</param>
         /// <param name="databaseName">The name of the database.</param>
+        /// <param name="fileSystem">An object that provides access to the file system.</param>
         /// <param name="sqlParser">The sql script parser for reading the SQL file contents.</param>
         /// <param name="ignoreUnsupportedSubdirectories">A flag indicating whether to ignore subdirectories that don't conform to the expected naming convention.</param>
-        public FileSystemScriptRepository(DirectoryInfo scriptDirectory, string serverName, string databaseName, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
+        public FileSystemScriptRepository(DirectoryInfoBase scriptDirectory, string serverName, string databaseName, IFileSystem fileSystem, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
         {
             ScriptDirectory = scriptDirectory;
             ServerName = serverName.TrimObjectName();
             DatabaseName = databaseName.TrimObjectName();
             IgnoreUnsupportedSubdirectories = ignoreUnsupportedSubdirectories;
-            objectTypes = Enum.GetValues(typeof(DatabaseObjectType)).Cast<DatabaseObjectType>()
+            _objectTypes = Enum.GetValues(typeof(DatabaseObjectType)).Cast<DatabaseObjectType>()
                 .ToDictionary(x => x.ToString(), y => y, StringComparer.InvariantCultureIgnoreCase);
-            this.sqlParser = sqlParser;
-            this.isFileInSupportedDirectory = f => objectTypes.ContainsKey(f.Directory.Name);
+            this.FileSystem = fileSystem;
+            this._sqlParser = sqlParser;
+            this.IsFileInSupportedDirectory = f => _objectTypes.ContainsKey(f.Directory.Name);
         }
 
         #endregion
@@ -70,7 +75,7 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <summary>
         /// Gets the directory where build scripts are located.
         /// </summary>
-        public DirectoryInfo ScriptDirectory { get; private set; }
+        public DirectoryInfoBase ScriptDirectory { get; private set; }
 
         /// <summary>
         /// Gets the name of the database server.
@@ -145,7 +150,7 @@ namespace ZocBuild.Database.ScriptRepositories
             {
                 return new ScriptFile(dbObject, new MissingScriptFileError(dbObject));
             }
-            var file = new FileInfo(Path.Combine(ScriptDirectory.FullName, dbObject.SchemaName, dbObject.ObjectType.ToString(), dbObject.ObjectName + ".sql"));
+            var file = FileSystem.FileInfo.FromFileName(Path.Combine(ScriptDirectory.FullName, dbObject.SchemaName, dbObject.ObjectType.ToString(), dbObject.ObjectName + ".sql"));
             return await GetScriptAsync(file);
         }
 
@@ -157,14 +162,14 @@ namespace ZocBuild.Database.ScriptRepositories
         /// </summary>
         /// <param name="dbObject">The database object for which a script file is desired.</param>
         /// <returns>A file descriptor for the script.</returns>
-        public FileInfo GetScriptFile(TypedDatabaseObject dbObject)
+        public FileInfoBase GetScriptFile(TypedDatabaseObject dbObject)
         {
             if (!string.Equals(dbObject.ServerName, ServerName, StringComparison.InvariantCultureIgnoreCase)
                 || !string.Equals(dbObject.DatabaseName, DatabaseName, StringComparison.InvariantCultureIgnoreCase))
             {
                 throw new ArgumentException("The given database object identifier does not belong to the database for which this script repository builds.", "dbObject");
             }
-            var file = new FileInfo(Path.Combine(ScriptDirectory.FullName, dbObject.SchemaName, dbObject.ObjectType.ToString(), dbObject.ObjectName + ".sql"));
+            var file = FileSystem.FileInfo.FromFileName(Path.Combine(ScriptDirectory.FullName, dbObject.SchemaName, dbObject.ObjectType.ToString(), dbObject.ObjectName + ".sql"));
             return file;
         }
 
@@ -175,12 +180,12 @@ namespace ZocBuild.Database.ScriptRepositories
         /// </summary>
         /// <param name="filter">The predicate with which the build scripts are filtered.</param>
         /// <returns>A collection of build scripts.</returns>
-        protected virtual async Task<ICollection<ScriptFile>> GetScriptsAsync(Func<FileInfo, bool> filter)
+        protected virtual async Task<ICollection<ScriptFile>> GetScriptsAsync(Func<FileInfoBase, bool> filter)
         {
-            Func<FileInfo, bool> saferFilter;
+            Func<FileInfoBase, bool> saferFilter;
             if (IgnoreUnsupportedSubdirectories)
             {
-                saferFilter = f => isFileInSupportedDirectory(f) && filter(f);
+                saferFilter = f => IsFileInSupportedDirectory(f) && filter(f);
             }
             else
             {
@@ -201,17 +206,17 @@ namespace ZocBuild.Database.ScriptRepositories
         /// </summary>
         /// <param name="file">The file containing a build script</param>
         /// <returns>A build script.</returns>
-        protected async Task<ScriptFile> GetScriptAsync(FileInfo file)
+        protected async Task<ScriptFile> GetScriptAsync(FileInfoBase file)
         {
             // Parse file name and path
             var typeName = file.Directory.Name;
             var schemaName = file.Directory.Parent.Name;
             var fileName = Path.GetFileNameWithoutExtension(file.FullName);
-            if(!objectTypes.ContainsKey(typeName))
+            if(!_objectTypes.ContainsKey(typeName))
             {
                 return new ScriptFile(new DatabaseObject(ServerName, DatabaseName, schemaName.TrimObjectName(), fileName.TrimObjectName()), new UnexpectedObjectTypeError(typeName));
             }
-            var objectType = objectTypes[typeName];
+            var objectType = _objectTypes[typeName];
             var dbObject = new TypedDatabaseObject(ServerName, DatabaseName, schemaName.TrimObjectName(), fileName.TrimObjectName(), objectType);
 
             // Read file contents
@@ -228,15 +233,15 @@ namespace ZocBuild.Database.ScriptRepositories
             }
             catch (DirectoryNotFoundException)
             {
-                return new ScriptFile(dbObject, GetDropScript(dbObject), sqlParser);
+                return new ScriptFile(dbObject, GetDropScript(dbObject), _sqlParser);
             }
             catch (FileNotFoundException)
             {
-                return new ScriptFile(dbObject, GetDropScript(dbObject), sqlParser);
+                return new ScriptFile(dbObject, GetDropScript(dbObject), _sqlParser);
             }
 
             // Parse script file
-            var script = new ScriptFile(dbObject, content, sqlParser);
+            var script = new ScriptFile(dbObject, content, _sqlParser);
 
             return script;
         }

@@ -18,10 +18,9 @@ namespace ZocBuild.Database.Application.Settings
         public string ConnectionString { get; set; }
         public string ScriptsPath { get; set; }
 
-        public Database Create(IDbConnection connection, IDbTransaction transaction, FileInfo pathToGit, IParser sqlParser)
+        public Database Create(IDbConnection connection, IDbTransaction transaction)
         {
-            var repo = new GitScriptRepository(ScriptsPath, ServerName, DatabaseName, pathToGit, sqlParser, false);
-            return new Database(ServerName, DatabaseName, connection, transaction, repo);
+            return new Database(ServerName, DatabaseName, connection, transaction);
         }
 
         public bool IsSettingForDatabase(DatabaseSetting db)

@@ -5,6 +5,7 @@ using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.Data.SqlClient;
 using System.IO;
+using System.IO.Abstractions;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -107,15 +108,13 @@ namespace ZocBuild.Database.Application
                 await connection.OpenAsync();
                 using (var transaction = connection.BeginTransaction())
                 {
-                    var db = dbSetting.Create(connection, transaction, pathToGit, sqlParser);
+                    var fileSystem = new FileSystem();
+                    var db = dbSetting.Create(connection, transaction);
+                    var gitProcess = new ExternalProcess(pathToGit.FullName);
+                    var dvcsScriptRepo = new GitScriptRepository(dbSetting.ScriptsPath, dbSetting.ServerName, dbSetting.DatabaseName, gitProcess, fileSystem, sqlParser, false);
+                    dvcsScriptRepo.SourceChangeset = sourceChangeset;
 
-                    var dvcsScriptRepo = db.Scripts as DvcsScriptRepositoryBase;
-                    if (dvcsScriptRepo != null)
-                    {
-                        dvcsScriptRepo.SourceChangeset = sourceChangeset;
-                    }
-
-                    buildItems = await db.GetChangedBuildItemsAsync();
+                    buildItems = await db.GetChangedBuildItemsAsync(dvcsScriptRepo);
                     transaction.Commit();
                 }
             }
@@ -137,14 +136,8 @@ namespace ZocBuild.Database.Application
                 await connection.OpenAsync();
                 using (var transaction = connection.BeginTransaction())
                 {
-                    var db = dbSetting.Create(connection, transaction, pathToGit, sqlParser);
-
-                    var dvcsScriptRepo = db.Scripts as DvcsScriptRepositoryBase;
-                    if (dvcsScriptRepo != null)
-                    {
-                        dvcsScriptRepo.SourceChangeset = sourceChangeset;
-                    }
-
+                    var db = dbSetting.Create(connection, transaction);
+                    
                     if (await db.BuildAsync(items))
                     {
                         transaction.Commit();
