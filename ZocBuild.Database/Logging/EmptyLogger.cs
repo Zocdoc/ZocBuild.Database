@@ -10,9 +10,8 @@ namespace ZocBuild.Database.Logging
     {
         private static readonly Action NoOpAction = () => { };
 
-        public Task LogMessageAsync(string message, SeverityLevel severity)
+        public async Task LogMessageAsync(string message, SeverityLevel severity)
         {
-            return new Task(NoOpAction);
         }
     }
 }

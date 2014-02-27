@@ -12,15 +12,7 @@ namespace ZocBuild.Database.Util
     {
         public static async Task OpenAsync(this IDbConnection connection)
         {
-            var sqlConnection = connection as SqlConnection;
-            if (sqlConnection != null)
-            {
-                await sqlConnection.OpenAsync();
-            }
-            else
-            {
-                connection.Open();
-            }
+            connection.Open();
         }
     }
 }

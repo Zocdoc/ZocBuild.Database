@@ -13,28 +13,12 @@ namespace ZocBuild.Database.Util
     {
         public static async Task<bool> ReadAsync(this IDataReader reader)
         {
-            var sqlReader = reader as DbDataReader;
-            if (sqlReader != null)
-            {
-                return await sqlReader.ReadAsync();
-            }
-            else
-            {
-                return reader.Read();
-            }
+            return reader.Read();
         }
 
         public static async Task<bool> NextResultAsync(this IDataReader reader)
         {
-            var sqlReader = reader as DbDataReader;
-            if (sqlReader != null)
-            {
-                return await sqlReader.NextResultAsync();
-            }
-            else
-            {
-                return reader.NextResult();
-            }
+            return reader.NextResult();
         }
 
         public static async Task<T> GetFieldValueAsync<T>(this IDataReader reader, string name)
@@ -46,16 +30,8 @@ namespace ZocBuild.Database.Util
 
         public static async Task<T> GetFieldValueAsync<T>(this IDataReader reader, int ordinal)
         {
-            var sqlReader = reader as DbDataReader;
-            if (sqlReader != null)
-            {
-                return await sqlReader.GetFieldValueAsync<T>(ordinal);
-            }
-            else
-            {
-                // TODO: Implement a smarter conversion mechanism
-                return (T)reader.GetValue(ordinal);
-            }
+            // TODO: Implement a smarter conversion mechanism
+            return (T)reader.GetValue(ordinal);
         }
     }
 }

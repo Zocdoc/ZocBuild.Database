@@ -15,7 +15,8 @@ namespace ZocBuild.Database.Util
             var sqlCommand = command as SqlCommand;
             if (sqlCommand != null)
             {
-                return await sqlCommand.ExecuteReaderAsync();
+                var asyncResult = sqlCommand.BeginExecuteReader();
+                return await Task.Factory.FromAsync<SqlDataReader>(asyncResult, sqlCommand.EndExecuteReader);
             }
             else
             {
@@ -28,7 +29,8 @@ namespace ZocBuild.Database.Util
             var sqlCommand = command as SqlCommand;
             if (sqlCommand != null)
             {
-                return await sqlCommand.ExecuteNonQueryAsync();
+                var asyncResult = sqlCommand.BeginExecuteNonQuery();
+                return await Task.Factory.FromAsync<int>(asyncResult, sqlCommand.EndExecuteNonQuery);
             }
             else
             {

@@ -102,31 +102,47 @@ namespace ZocBuild.Database.Application
 
         private async Task Update(DatabaseSetting dbSetting, DvcsScriptRepositoryBase.RevisionIdentifierBase sourceChangeset)
         {
-            ICollection<BuildItem> buildItems;
-            using (var connection = new SqlConnection(dbSetting.ConnectionString))
+            try
             {
-                await connection.OpenAsync();
-                using (var transaction = connection.BeginTransaction())
+                ICollection<BuildItem> buildItems;
+                using (var connection = new SqlConnection(dbSetting.ConnectionString))
                 {
-                    var fileSystem = new FileSystem();
-                    var db = dbSetting.Create(connection, transaction);
-                    var gitProcess = new ExternalProcess(pathToGit.FullName);
-                    var dvcsScriptRepo = new GitScriptRepository(dbSetting.ScriptsPath, dbSetting.ServerName, dbSetting.DatabaseName, gitProcess, fileSystem, sqlParser, false);
-                    dvcsScriptRepo.SourceChangeset = sourceChangeset;
+                    await connection.OpenAsync();
+                    using (var transaction = connection.BeginTransaction())
+                    {
+                        var fileSystem = new FileSystem();
+                        var db = dbSetting.Create(connection, transaction);
+                        var gitProcess = new ExternalProcess(pathToGit.FullName);
+                        var dvcsScriptRepo = new GitScriptRepository(dbSetting.ScriptsPath, dbSetting.ServerName,
+                            dbSetting.DatabaseName, gitProcess, fileSystem, sqlParser, false);
+                        dvcsScriptRepo.SourceChangeset = sourceChangeset;
 
-                    buildItems = await db.GetChangedBuildItemsAsync(dvcsScriptRepo);
-                    transaction.Commit();
+                        buildItems = await db.GetChangedBuildItemsAsync(dvcsScriptRepo);
+                        transaction.Commit();
+                    }
                 }
-            }
 
-            Dispatcher.BeginInvoke((Action)(() =>
+                Dispatcher.BeginInvoke((Action)(() =>
+                {
+                    ((MainWindowViewModel)DataContext).IsReady = true;
+                    ((MainWindowViewModel)DataContext).IsDone = false;
+                    ObservableCollection<BuildItemViewModel> itemsCollection = new ObservableCollection<BuildItemViewModel>
+                        (buildItems.Select(x => new BuildItemViewModel(x, Dispatcher)));
+                    ((MainWindowViewModel)DataContext).Items = itemsCollection;
+                }));
+            }
+            catch (Exception ex)
             {
-                ((MainWindowViewModel)DataContext).IsReady = true;
-                ((MainWindowViewModel)DataContext).IsDone = false;
-                ObservableCollection<BuildItemViewModel> itemsCollection = new ObservableCollection<BuildItemViewModel>
-                    (buildItems.Select(x => new BuildItemViewModel(x, Dispatcher)));
-                ((MainWindowViewModel)DataContext).Items = itemsCollection;
-            }));
+                Dispatcher.BeginInvoke((Action)(() =>
+                {
+                    ((MainWindowViewModel)DataContext).IsReady = true;
+                    ((MainWindowViewModel)DataContext).IsDone = false;
+                    ObservableCollection<BuildItemViewModel> itemsCollection = new ObservableCollection<BuildItemViewModel>();
+                    ((MainWindowViewModel)DataContext).Items = itemsCollection;
+
+                    MessageBox.Show(ex.Message);
+                }));
+            }
         }
 
         private async Task Build(IEnumerable<BuildItem> items, DatabaseSetting dbSetting, DvcsScriptRepositoryBase.RevisionIdentifierBase sourceChangeset)
