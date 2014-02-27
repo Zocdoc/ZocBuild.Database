@@ -71,9 +71,11 @@
     <Compile Include="Errors\SqlParseError.cs" />
     <Compile Include="Errors\UnexpectedObjectTypeError.cs" />
     <Compile Include="Exceptions\EmptyTextException.cs" />
+    <Compile Include="Exceptions\ExternalProcessException.cs" />
     <Compile Include="Exceptions\MultipleStatementException.cs" />
     <Compile Include="Exceptions\SqlParseException.cs" />
     <Compile Include="Exceptions\UnexpectedObjectTypeException.cs" />
+    <Compile Include="ExternalProcess.cs" />
     <Compile Include="IScriptRepository.cs" />
     <Compile Include="Logging\ConsoleLogger.cs" />
     <Compile Include="Logging\EmptyLogger.cs" />
