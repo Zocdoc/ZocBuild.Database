@@ -126,6 +126,20 @@ namespace ZocBuild.Database
         }
 
         /// <summary>
+        /// Gets the content of the database object's build script.
+        /// </summary>
+        /// <remarks>
+        /// This property can be null if the build script failed to load.
+        /// </remarks>
+        public string ScriptContent
+        {
+            get
+            {
+                return Script.Content;
+            }
+        }
+
+        /// <summary>
         /// Gets the build script to be used for building this database object.
         /// </summary>
         /// <remarks>
