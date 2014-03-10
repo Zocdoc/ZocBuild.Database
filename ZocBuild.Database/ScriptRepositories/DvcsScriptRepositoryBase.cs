@@ -13,6 +13,18 @@ namespace ZocBuild.Database.ScriptRepositories
     /// Represents a script repository that stores build scripts in a distributed version control 
     /// system.
     /// </summary>
+    public interface IDvcsScriptRepository : IScriptRepository
+    {
+        /// <summary>
+        /// Gets or sets the revision against which changes should be compared.
+        /// </summary>
+        DvcsScriptRepositoryBase.RevisionIdentifierBase SourceChangeset { get; set; }
+    }
+
+    /// <summary>
+    /// Represents a script repository that stores build scripts in a distributed version control 
+    /// system.
+    /// </summary>
     /// <remarks>
     /// The build script files in the distributed version repository must be organized with the 
     /// same structure as required by <see cref="FileSystemScriptRepository"/>.  The root location 
@@ -22,7 +34,7 @@ namespace ZocBuild.Database.ScriptRepositories
     /// with file names ending with ".sql".  The name of each file should be the same name as the 
     /// database object it creates.
     /// </remarks>
-    public abstract class DvcsScriptRepositoryBase : FileSystemScriptRepository
+    public abstract class DvcsScriptRepositoryBase : FileSystemScriptRepository, IDvcsScriptRepository
     {
         #region Constructors
 
