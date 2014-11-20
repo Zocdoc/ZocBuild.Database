@@ -14,6 +14,11 @@
   <PropertyGroup>
     <ApplicationIcon>zocdoc.ico</ApplicationIcon>
   </PropertyGroup>
+  <ItemGroup Condition=" '$(TargetFrameworkVersion)' == 'v4.0' ">
+    <Reference Include="Microsoft.CompilerServices.AsyncTargetingPack.Net4">
+      <HintPath>..\packages\Microsoft.CompilerServices.AsyncTargetingPack.1.0.0\lib\net40\Microsoft.CompilerServices.AsyncTargetingPack.Net4.dll</HintPath>
+    </Reference>
+  </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
