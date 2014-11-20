@@ -335,6 +335,10 @@ namespace ZocBuild.Database
             }
         }
 
+        /// <summary>
+        /// Returns a string representation of the object.
+        /// </summary>
+        /// <returns>A string that describes this object.</returns>
         public override string ToString()
         {
             return ServerName + "." + DatabaseName;

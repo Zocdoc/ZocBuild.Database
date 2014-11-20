@@ -6,9 +6,18 @@ using System.Threading.Tasks;
 
 namespace ZocBuild.Database.Errors
 {
+    /// <summary>
+    /// Represents an error caused by an object having circular dependencies.
+    /// </summary>
     public class CircularDependencyError : BuildErrorBase
     {
         private readonly string message;
+
+        /// <summary>
+        /// Creates an instance of a circular dependency error object.
+        /// </summary>
+        /// <param name="item">The affected build item.</param>
+        /// <param name="scriptsToDependencies">A mapping of build items to their dependencies.</param>
         public CircularDependencyError(BuildItem item, IDictionary<BuildItem, List<BuildItem>> scriptsToDependencies)
         {
             // Traverse circular dependency
@@ -31,16 +40,26 @@ namespace ZocBuild.Database.Errors
             }
         }
 
+        /// <summary>
+        /// Gets the display name of the error type.
+        /// </summary>
         public override string ErrorType
         {
             get { return "Circular Dependency"; }
         }
 
+        /// <summary>
+        /// Returns the message for this error.
+        /// </summary>
+        /// <returns>The error message.</returns>
         public override string GetMessage()
         {
             return message;
         }
 
+        /// <summary>
+        /// Gets the status for which this error corresponds.
+        /// </summary>
         public override BuildItem.BuildStatusType Status
         {
             get { return BuildItem.BuildStatusType.CircularDependencyError; }

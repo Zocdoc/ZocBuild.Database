@@ -6,10 +6,17 @@ using System.Threading.Tasks;
 
 namespace ZocBuild.Database.Errors
 {
+    /// <summary>
+    /// Represents an error that occurred while deploying a dependency of a build item.
+    /// </summary>
     public class DependencyError : BuildErrorBase
     {
         private readonly IList<BuildItem> failureChain;
- 
+
+        /// <summary>
+        /// Creates an instance of a dependency error object.
+        /// </summary>
+        /// <param name="failureChain">The chain of dependencies, starting with the object that failed.</param>
         public DependencyError(IEnumerable<BuildItem> failureChain)
         {
             this.failureChain = failureChain.ToList().AsReadOnly();
@@ -23,16 +30,26 @@ namespace ZocBuild.Database.Errors
             }
         }
 
+        /// <summary>
+        /// Gets the chain of dependencies, starting with the object that failed.
+        /// </summary>
         public IEnumerable<BuildItem> FailureChain
         {
             get { return failureChain; }
         }
 
+        /// <summary>
+        /// Gets the display name of the error type.
+        /// </summary>
         public override string ErrorType
         {
             get { return "Dependency Error"; }
         }
 
+        /// <summary>
+        /// Returns the message for this error.
+        /// </summary>
+        /// <returns>The error message.</returns>
         public override string GetMessage()
         {
             StringBuilder sb = new StringBuilder();
@@ -52,6 +69,9 @@ namespace ZocBuild.Database.Errors
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Gets the status for which this error corresponds.
+        /// </summary>
         public override BuildItem.BuildStatusType Status
         {
             get { return BuildItem.BuildStatusType.DependencyError; }
