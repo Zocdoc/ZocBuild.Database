@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata>
+		<id>ZocBuild.Database</id>
+		<version>$version$</version>
+		<title>ZocBuild.Database</title>
+		<authors>ZocDoc, Inc.</authors>
+		<owners>ZocDoc, Inc.</owners>
+		<projectUrl>https://github.com/ZocDoc/ZocBuild.Database</projectUrl>
+		<iconUrl>https://www.zocdoc.com/images/zdnupkg.png</iconUrl>
+		<licenseUrl>https://github.com/ZocDoc/ZocBuild.Database/raw/master/LICENSE</licenseUrl>
+		<requireLicenseAcceptance>true</requireLicenseAcceptance>
+		<description>ZocBuild.Database is a build and deployment library for objects in SQL Server databases. It is designed to make it easy to store the definitions of functions, stored procedures, user defined types, and views in a version control system like Git, while enabling automated deployments of those objects whenever their script files change.</description>
+		<dependencies>
+			<dependency id="System.IO.Abstractions" version="1.4.0.76" />
+			<dependency id="Microsoft.CompilerServices.AsyncTargetingPack" version="1.0.0" targetFramework="net40" />
+		</dependencies>
+	</metadata>
+	<files>
+		<file src="bin\$configuration$\v4.5\ZocBuild.Database.dll" target="lib\net45" />
+		<file src="bin\$configuration$\v4.5\ZocBuild.Database.pdb" target="lib\net45" />
+		<file src="bin\$configuration$\v4.0\ZocBuild.Database.dll" target="lib\net40" />
+		<file src="bin\$configuration$\v4.0\ZocBuild.Database.pdb" target="lib\net40" />
+		<file src="**\*.cs" target="src" />
+	</files>
+</package>
