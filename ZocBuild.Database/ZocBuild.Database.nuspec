@@ -12,8 +12,12 @@
 		<requireLicenseAcceptance>true</requireLicenseAcceptance>
 		<description>ZocBuild.Database is a build and deployment library for objects in SQL Server databases. It is designed to make it easy to store the definitions of functions, stored procedures, user defined types, and views in a version control system like Git, while enabling automated deployments of those objects whenever their script files change.</description>
 		<dependencies>
-			<dependency id="System.IO.Abstractions" version="1.4.0.76" />
-			<dependency id="Microsoft.CompilerServices.AsyncTargetingPack" version="1.0.0" targetFramework="net40" />
+			<group>
+				<dependency id="System.IO.Abstractions" version="1.4.0.76" />
+			</group>
+			<group targetFramework="net40">
+				<dependency id="Microsoft.CompilerServices.AsyncTargetingPack" version="1.0.0" />
+			</group>
 		</dependencies>
 	</metadata>
 	<files>
