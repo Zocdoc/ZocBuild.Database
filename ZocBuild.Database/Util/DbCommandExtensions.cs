@@ -30,7 +30,9 @@ namespace ZocBuild.Database.Util
             if (sqlCommand != null)
             {
                 var asyncResult = sqlCommand.BeginExecuteNonQuery();
-                return await Task.Factory.FromAsync<int>(asyncResult, sqlCommand.EndExecuteNonQuery);
+                // TODO - DAC figure out what is wrong here and document or fix it.
+                var task = Task.Factory.FromAsync<int>(asyncResult, sqlCommand.EndExecuteNonQuery);
+                return task.Result;
             }
             else
             {
