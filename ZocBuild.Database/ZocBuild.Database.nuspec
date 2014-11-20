@@ -19,8 +19,10 @@
 	<files>
 		<file src="bin\$configuration$\v4.5\ZocBuild.Database.dll" target="lib\net45" />
 		<file src="bin\$configuration$\v4.5\ZocBuild.Database.pdb" target="lib\net45" />
+		<file src="bin\$configuration$\v4.5\ZocBuild.Database.xml" target="lib\net45" />
 		<file src="bin\$configuration$\v4.0\ZocBuild.Database.dll" target="lib\net40" />
 		<file src="bin\$configuration$\v4.0\ZocBuild.Database.pdb" target="lib\net40" />
+		<file src="bin\$configuration$\v4.0\ZocBuild.Database.xml" target="lib\net40" />
 		<file src="**\*.cs" target="src" />
 	</files>
 </package>

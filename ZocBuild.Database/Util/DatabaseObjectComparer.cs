@@ -11,6 +11,12 @@ namespace ZocBuild.Database.Util
     /// </summary>
     public class DatabaseObjectComparer : IEqualityComparer<DatabaseObject>
     {
+        /// <summary>
+        /// Indicates whether two database object descriptors are equal.
+        /// </summary>
+        /// <param name="x">A descriptor to compare.</param>
+        /// <param name="y">A descriptor to compare.</param>
+        /// <returns>True if the parameters are equivalent; otherwise, false.</returns>
         public bool Equals(DatabaseObject x, DatabaseObject y)
         {
             bool result = StringComparer.InvariantCultureIgnoreCase.Equals(x.ServerName.TrimObjectName(), y.ServerName.TrimObjectName());
@@ -20,6 +26,11 @@ namespace ZocBuild.Database.Util
             return result;
         }
 
+        /// <summary>
+        /// Gets the hash code for the specified database object descriptor.
+        /// </summary>
+        /// <param name="obj">A descriptor.</param>
+        /// <returns>A 32-bit signed hash code calculated from the given value.</returns>
         public int GetHashCode(DatabaseObject obj)
         {
             int result = StringComparer.InvariantCultureIgnoreCase.GetHashCode(obj.ServerName.TrimObjectName());
@@ -36,7 +47,13 @@ namespace ZocBuild.Database.Util
     public class TypedDatabaseObjectComparer : IEqualityComparer<TypedDatabaseObject>
     {
         private readonly DatabaseObjectComparer baseComparer = new DatabaseObjectComparer();
-
+        
+        /// <summary>
+        /// Indicates whether two database object descriptors are equal.
+        /// </summary>
+        /// <param name="x">A descriptor to compare.</param>
+        /// <param name="y">A descriptor to compare.</param>
+        /// <returns>True if the parameters are equivalent; otherwise, false.</returns>
         public bool Equals(TypedDatabaseObject x, TypedDatabaseObject y)
         {
             bool result = baseComparer.Equals(x, y);
@@ -44,6 +61,11 @@ namespace ZocBuild.Database.Util
             return result;
         }
 
+        /// <summary>
+        /// Gets the hash code for the specified database object descriptor.
+        /// </summary>
+        /// <param name="obj">A descriptor.</param>
+        /// <returns>A 32-bit signed hash code calculated from the given value.</returns>
         public int GetHashCode(TypedDatabaseObject obj)
         {
             int result = baseComparer.GetHashCode(obj);

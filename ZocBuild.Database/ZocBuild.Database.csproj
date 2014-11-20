@@ -9,6 +9,7 @@
     <RootNamespace>ZocBuild.Database</RootNamespace>
     <AssemblyName>ZocBuild.Database</AssemblyName>
     <FileAlignment>512</FileAlignment>
+    <DocumentationFile>$(OutputPath)ZocBuild.Database.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup Condition=" '$(TargetFrameworkVersion)' == 'v4.0' ">
     <Reference Include="Microsoft.CompilerServices.AsyncTargetingPack.Net4">

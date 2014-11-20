@@ -169,6 +169,10 @@ namespace ZocBuild.Database.ScriptRepositories
             /// </summary>
             public string TagName { get; set; }
 
+            /// <summary>
+            /// Returns a string representation of the object.
+            /// </summary>
+            /// <returns>A string that describes this object.</returns>
             public override string ToString()
             {
                 return TagName;
@@ -221,6 +225,10 @@ namespace ZocBuild.Database.ScriptRepositories
             /// </summary>
             public byte[] Hash { get; set; }
 
+            /// <summary>
+            /// Returns a string representation of the object.
+            /// </summary>
+            /// <returns>A string that describes this object.</returns>
             public override string ToString()
             {
                 StringBuilder sb = new StringBuilder();
