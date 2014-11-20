@@ -72,8 +72,8 @@ namespace ZocBuild.Database.ScriptRepositories
         #region DvcsScriptRepositoryBase Members
 
         /// <summary>
-        /// Gets the files that have changed between the revision specified by <see cref="SourceChangeset"/> 
-        /// and the current HEAD.
+        /// Gets the files that have changed between the revision specified by SourceChangeset and 
+        /// the current HEAD.
         /// </summary>
         /// <returns>A collection of files.</returns>
         protected override async Task<ICollection<FileInfoBase>> GetDiffedFilesAsync()

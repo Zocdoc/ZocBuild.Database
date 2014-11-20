@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<PropertyGroup>
+		<Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+		<Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+		<TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' " >v4.5</TargetFrameworkVersion>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<DefineConstants Condition=" '$(TargetFrameworkVersion)' == 'v4.0' ">$(DefineConstants);NET_40</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>full</DebugType>
+		<Optimize>false</Optimize>
+		<IntermediateOutputPath>obj\Debug\$(TargetFrameworkVersion)\</IntermediateOutputPath>
+		<OutputPath>bin\Debug\$(TargetFrameworkVersion)\</OutputPath>
+		<DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
+		<ErrorReport>prompt</ErrorReport>
+		<WarningLevel>4</WarningLevel>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+		<DebugType>pdbonly</DebugType>
+		<Optimize>true</Optimize>
+		<IntermediateOutputPath>obj\Release\$(TargetFrameworkVersion)\</IntermediateOutputPath>
+		<OutputPath>bin\Release\$(TargetFrameworkVersion)\</OutputPath>
+		<DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+		<ErrorReport>prompt</ErrorReport>
+		<WarningLevel>4</WarningLevel>
+	</PropertyGroup>
+</Project>

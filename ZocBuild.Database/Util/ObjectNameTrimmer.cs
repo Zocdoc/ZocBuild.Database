@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace ZocBuild.Database.Util
 {
+    /// <summary>
+    /// Utility for removing extraneous characters from an object's name.
+    /// </summary>
     public static class ObjectNameTrimmer
     {
         /// <summary>

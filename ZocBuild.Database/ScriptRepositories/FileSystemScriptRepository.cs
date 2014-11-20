@@ -27,7 +27,15 @@ namespace ZocBuild.Database.ScriptRepositories
     {
         private readonly Dictionary<string, DatabaseObjectType> _objectTypes;
         private readonly IParser _sqlParser;
+
+        /// <summary>
+        /// The contract for interacting with the file system.
+        /// </summary>
         protected readonly IFileSystem FileSystem;
+
+        /// <summary>
+        /// A function that indicates whether a given file is in a managed directory.
+        /// </summary>
         protected readonly Func<FileInfoBase, bool> IsFileInSupportedDirectory;
 
         #region Constructors

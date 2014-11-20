@@ -46,6 +46,10 @@ namespace ZocBuild.Database
         /// </summary>
         public string ObjectName { get; private set; }
 
+        /// <summary>
+        /// Returns a string representation of the object.
+        /// </summary>
+        /// <returns>A string that describes this object.</returns>
         public override string ToString()
         {
             string result = string.Empty;
@@ -108,9 +112,24 @@ namespace ZocBuild.Database
     /// </summary>
     public enum DatabaseObjectType
     {
+        /// <summary>
+        /// Indicates that the object is a view.
+        /// </summary>
         View = 0,
+
+        /// <summary>
+        /// Indicates that the object is a stored procedure.
+        /// </summary>
         Procedure = 1,
+
+        /// <summary>
+        /// Indicates that the object is a user-defined function.
+        /// </summary>
         Function = 2,
+
+        /// <summary>
+        /// Indicates that the object is a user-defined type.
+        /// </summary>
         Type = 3
     }
 }

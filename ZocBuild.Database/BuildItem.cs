@@ -20,11 +20,34 @@ namespace ZocBuild.Database
         /// </summary>
         public enum BuildStatusType
         {
+            /// <summary>
+            /// Represents that a build item has not yet been processed.
+            /// </summary>
             None,
+
+            /// <summary>
+            /// Represents that a build item has a problem with its script content.
+            /// </summary>
             ScriptError,
+
+            /// <summary>
+            /// Represents that a build item's dependencies are circular.
+            /// </summary>
             CircularDependencyError,
+
+            /// <summary>
+            /// Represents that a build item experienced a problem during deployment.
+            /// </summary>
             BuildError,
+
+            /// <summary>
+            /// Represents that a build item's dependencies experienced a problem during deployment.
+            /// </summary>
             DependencyError,
+
+            /// <summary>
+            /// Represents that the build item was successfully deployed.
+            /// </summary>
             Success
         }
 
@@ -214,12 +237,25 @@ namespace ZocBuild.Database
         /// </summary>
         public class BuildStatusEventArgs : EventArgs
         {
+            /// <summary>
+            /// Creates an instance of event args for a status change.
+            /// </summary>
+            /// <param name="newStatus">The value of the new status.</param>
+            /// <param name="oldStatus">The value of the old status.</param>
             public BuildStatusEventArgs(BuildStatusType newStatus, BuildStatusType oldStatus)
             {
                 NewStatus = newStatus;
                 OldStatus = oldStatus;
             }
+            
+            /// <summary>
+            /// Gets a value representing the new status of the build item.
+            /// </summary>
             public BuildStatusType NewStatus { get; private set; }
+
+            /// <summary>
+            /// Gets a value representing the old status of the build item.
+            /// </summary>
             public BuildStatusType OldStatus { get; private set; }
         }
     }
