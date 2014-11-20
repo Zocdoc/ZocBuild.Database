@@ -67,7 +67,7 @@ namespace ZocBuild.Database.Build
             Action<BuildItem, Exception> onFailure = (i, ex) =>
             {
                 // Script failed, set its status
-                i.ReportError(new BuildError(ex.Message));
+                i.ReportError(new BuildError(ex));
 
                 // Set status of referencers
                 DependencyError.SetDependencyErrorStatus(i.Referencers, Enumerable.Repeat(i, 1));
@@ -83,7 +83,7 @@ namespace ZocBuild.Database.Build
             Action<BuildItem, Exception> onFailure = (i, ex) =>
                 {
                     // Script failed, set its status
-                    i.ReportError(new BuildError(ex.Message));
+                    i.ReportError(new BuildError(ex));
 
                     // Set status of referencers
                     DependencyError.SetDependencyErrorStatus(i.Referencers, Enumerable.Repeat(i, 1));

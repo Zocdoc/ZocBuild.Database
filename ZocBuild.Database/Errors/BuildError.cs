@@ -9,9 +9,13 @@ namespace ZocBuild.Database.Errors
     public class BuildError : BuildErrorBase
     {
         private readonly string message;
-        public BuildError(string message)
+
+        public BuildError(Exception ex)
         {
-            this.message = message;
+            var aex = ex as AggregateException;
+            this.message = aex == null
+                               ? ex.Message
+                               : string.Join(Environment.NewLine, aex.InnerExceptions.Select(x => x.Message));
         }
 
         public override string ErrorType
