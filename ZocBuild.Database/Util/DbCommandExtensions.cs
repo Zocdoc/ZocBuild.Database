@@ -15,7 +15,12 @@ namespace ZocBuild.Database.Util
             var sqlCommand = command as SqlCommand;
             if (sqlCommand != null)
             {
+#if NET_40
+                var asyncResult = sqlCommand.BeginExecuteReader();
+                return await Task.Factory.FromAsync<SqlDataReader>(asyncResult, sqlCommand.EndExecuteReader);
+#else
                 return await sqlCommand.ExecuteReaderAsync();
+#endif
             }
             else
             {
@@ -23,17 +28,26 @@ namespace ZocBuild.Database.Util
             }
         }
 
+#pragma warning disable 1998
         public static async Task<int> ExecuteNonQueryAsync(this IDbCommand command)
         {
             var sqlCommand = command as SqlCommand;
             if (sqlCommand != null)
             {
+#if NET_40
+                var asyncResult = sqlCommand.BeginExecuteNonQuery();
+                // TODO - DAC figure out what is wrong here and document or fix it.
+                var task = Task.Factory.FromAsync<int>(asyncResult, sqlCommand.EndExecuteNonQuery);
+                return task.Result;
+#else
                 return await sqlCommand.ExecuteNonQueryAsync();
+#endif
             }
             else
             {
                 return command.ExecuteNonQuery();
             }
         }
+#pragma warning restore 1998
     }
 }

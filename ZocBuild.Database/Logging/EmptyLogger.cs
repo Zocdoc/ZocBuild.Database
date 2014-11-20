@@ -8,9 +8,22 @@ namespace ZocBuild.Database.Logging
 {
     public class EmptyLogger : ILogger
     {
-        public async Task LogMessageAsync(string message, SeverityLevel severity)
+        public Task LogMessageAsync(string message, SeverityLevel severity)
         {
-            await Task.Yield();
+#if NET_40
+            return NoOpAsync();
+#else
+            return Task.FromResult<object>(null);
+#endif
         }
+
+#if NET_40
+#pragma warning disable 1998
+        private static async Task NoOpAsync()
+        {
+
+        }
+#pragma warning restore 1998
+#endif
     }
 }

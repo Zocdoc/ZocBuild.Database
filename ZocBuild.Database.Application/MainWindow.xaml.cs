@@ -88,7 +88,7 @@ namespace ZocBuild.Database.Application
             var dbSetting = ((MainWindowViewModel)DataContext).SelectedDatabase;
             var sourceChangeset = ((MainWindowViewModel)DataContext).SourceChangeset;
             ((MainWindowViewModel)DataContext).IsReady = false;
-            Task.Run(() => Update(dbSetting, sourceChangeset));
+            RunTask(() => Update(dbSetting, sourceChangeset));
         }
 
         private void btBuild_Click(object sender, RoutedEventArgs e)
@@ -97,7 +97,7 @@ namespace ZocBuild.Database.Application
             var dbSetting = ((MainWindowViewModel)DataContext).SelectedDatabase;
             var sourceChangeset = ((MainWindowViewModel)DataContext).SourceChangeset;
             ((MainWindowViewModel) DataContext).IsReady = false;
-            Task.Run(() => Build(items, dbSetting, sourceChangeset));
+            RunTask(() => Build(items, dbSetting, sourceChangeset));
         }
 
         private async Task Update(DatabaseSetting dbSetting, DvcsScriptRepositoryBase.RevisionIdentifierBase sourceChangeset)
@@ -119,14 +119,14 @@ namespace ZocBuild.Database.Application
                 }
             }
 
-            await Dispatcher.BeginInvoke((Action)(() =>
+            await DispatcherInvoke(() =>
             {
                 ((MainWindowViewModel)DataContext).IsReady = true;
                 ((MainWindowViewModel)DataContext).IsDone = false;
                 ObservableCollection<BuildItemViewModel> itemsCollection = new ObservableCollection<BuildItemViewModel>
                     (buildItems.Select(x => new BuildItemViewModel(x, Dispatcher)));
                 ((MainWindowViewModel)DataContext).Items = itemsCollection;
-            }));
+            });
         }
 
         private async Task Build(IEnumerable<BuildItem> items, DatabaseSetting dbSetting, DvcsScriptRepositoryBase.RevisionIdentifierBase sourceChangeset)
@@ -145,7 +145,7 @@ namespace ZocBuild.Database.Application
                 }
             }
 
-            await Dispatcher.BeginInvoke((Action) (() =>
+            await DispatcherInvoke(() =>
                 {
                     ((MainWindowViewModel)DataContext).IsReady = true;
                     ((MainWindowViewModel)DataContext).IsDone = true;
@@ -153,7 +153,36 @@ namespace ZocBuild.Database.Application
                     Properties.Settings.Default.LastChangeset = vm.SourceChangeset as DvcsScriptRepositoryBase.ChangesetId;
                     Properties.Settings.Default.LastTag = vm.SourceChangeset as DvcsScriptRepositoryBase.Tag;
                     Properties.Settings.Default.Save();
-                }));
+                });
         }
+
+        private static void RunTask(Action a)
+        {
+#if NET_40
+            Task.Factory.StartNew(a);
+#else
+            Task.Run(a);
+#endif
+        }
+
+        private static void RunTask(Func<Task> t)
+        {
+#if NET_40
+            Task.Factory.StartNew(t);
+#else
+            Task.Run(t);
+#endif
+        }
+
+#pragma warning disable 1998
+        private async Task DispatcherInvoke(Action a)
+        {
+#if NET_40
+            Dispatcher.BeginInvoke(a);
+#else
+            await Dispatcher.BeginInvoke(a);
+#endif
+        }
+#pragma warning restore 1998
     }
 }
