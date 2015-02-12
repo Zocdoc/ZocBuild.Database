@@ -156,21 +156,56 @@ namespace ZocBuild.Database.Application
                 });
         }
 
-        private static void RunTask(Action a)
+        private async Task ShowExceptionMessage(Exception ex)
         {
-#if NET_40
-            Task.Factory.StartNew(a);
-#else
-            Task.Run(a);
-#endif
+            if (ex != null)
+            {
+                await DispatcherInvoke(() =>
+                {
+                    string message = "Unhandled exception occurred." + Environment.NewLine + ex.ToString();
+                    MessageBox.Show(message, "Unhandled exception", MessageBoxButton.OK, MessageBoxImage.Error);
+                });
+            }
         }
 
-        private static void RunTask(Func<Task> t)
+        private void RunTask(Action a)
         {
+            Func<Task> wrappedAction = async () =>
+            {
+                Exception exception = null;
+                try
+                {
+                    a();
+                }
+                catch (Exception e)
+                {
+                    exception = e;
+                }
+                await ShowExceptionMessage(exception);
+            };
+            RunTask(wrappedAction);
+        }
+
+        private void RunTask(Func<Task> t)
+        {
+            Func<Task> wrappedTask = async () =>
+            {
+                Exception exception = null;
+                try
+                {
+                    await t();
+                }
+                catch (Exception e)
+                {
+                    exception = e;
+                }
+                await ShowExceptionMessage(exception);
+            };
+
 #if NET_40
-            Task.Factory.StartNew(t);
+            Task.Factory.StartNew(wrappedTask);
 #else
-            Task.Run(t);
+            Task.Run(wrappedTask);
 #endif
         }
 
