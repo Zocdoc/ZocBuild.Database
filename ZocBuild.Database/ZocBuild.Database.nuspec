@@ -16,7 +16,8 @@
 				<dependency id="System.IO.Abstractions" version="1.4.0.76" />
 			</group>
 			<group targetFramework="net40">
-				<dependency id="Microsoft.CompilerServices.AsyncTargetingPack" version="1.0.0" />
+				<dependency id="System.IO.Abstractions" version="1.4.0.76" />
+				<dependency id="Microsoft.Bcl.Async" version="1.0.168" />
 			</group>
 		</dependencies>
 	</metadata>
