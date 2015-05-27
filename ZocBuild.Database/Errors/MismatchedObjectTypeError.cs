@@ -53,7 +53,7 @@ namespace ZocBuild.Database.Errors
         /// <returns>The error message.</returns>
         public override string GetMessage()
         {
-            return string.Format("Cannot use script of type {2} for {1} when expecting type {0}.", ObjectName, ExpectedType, ActualType);
+            return string.Format("Cannot use script of type {0} for {1} when expecting type {2}.", ActualType, ObjectName, ExpectedType);
         }
 
         /// <summary>

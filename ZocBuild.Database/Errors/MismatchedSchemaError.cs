@@ -53,7 +53,7 @@ namespace ZocBuild.Database.Errors
         /// <returns>The error message.</returns>
         public override string GetMessage()
         {
-            return string.Format("Cannot use script of schema {2} for {0} when expecting schema {1}.", ObjectName, ExpectedSchemaName, ActualSchemaName);
+            return string.Format("Cannot use script of schema {0} for {1} when expecting schema {2}.", ActualSchemaName, ObjectName, ExpectedSchemaName);
         }
 
         /// <summary>
