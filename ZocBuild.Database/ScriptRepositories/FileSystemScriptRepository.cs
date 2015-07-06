@@ -153,7 +153,7 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <returns>A collection of build scripts.</returns>
         public virtual async Task<ICollection<ScriptFile>> GetAllScriptsAsync()
         {
-            return await GetScriptsAsync(f => true);
+            return await GetScriptsAsync();
         }
 
         /// <summary>
@@ -196,18 +196,17 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <summary>
         /// Gets the build scripts in the repository that satisfy the given predicate.
         /// </summary>
-        /// <param name="filter">The predicate with which the build scripts are filtered.</param>
         /// <returns>A collection of build scripts.</returns>
-        protected virtual async Task<ICollection<ScriptFile>> GetScriptsAsync(Func<FileInfoBase, bool> filter)
+        protected virtual async Task<ICollection<ScriptFile>> GetScriptsAsync()
         {
             Func<FileInfoBase, bool> saferFilter;
             if (IgnoreUnsupportedSubdirectories)
             {
-                saferFilter = f => IsFileInSupportedDirectory(f) && filter(f);
+                saferFilter = f => IsFileInSupportedDirectory(f);
             }
             else
             {
-                saferFilter = filter;
+                saferFilter = f => true;
             }
 
             var scripts = new List<ScriptFile>();
@@ -215,7 +214,7 @@ namespace ZocBuild.Database.ScriptRepositories
             {
                 if (!saferFilter(f))
                 {
-                    await Logger.LogMessageAsync("Filtering out file: " + f.FullName, SeverityLevel.Verbose);
+                    await Logger.LogMessageAsync("Filtering out file because its in an unsupported subdirectory: " + f.FullName, SeverityLevel.Warning);
                     continue;
                 }
 

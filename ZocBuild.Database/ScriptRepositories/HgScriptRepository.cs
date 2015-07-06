@@ -98,16 +98,42 @@ namespace ZocBuild.Database.ScriptRepositories
                 foreach(var line in fileList)
                 {
                     var file = FileSystem.FileInfo.FromFileName(Path.Combine(ScriptDirectory.FullName, line));
-                    if (file.Extension.Equals(".sql", StringComparison.InvariantCultureIgnoreCase) && filter(file))
+                    if (file.Extension.Equals(".sql", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        result.Add(file);
+                        if (!filter(file))
+                        {
+                            await Logger.LogMessageAsync(
+                                    "Filtering out file because its in an unsupported subdirectory: " + file.FullName,
+                                    SeverityLevel.Warning);
+                        }
+                        else
+                        {
+                            result.Add(file);
+                        }
                     }
+
+
                 }
                 return result;
             }
             else
             {
-                return ScriptDirectory.GetFiles("*.sql", SearchOption.AllDirectories).Where(filter).ToList();
+                var result = new List<FileInfoBase>();
+                var fileList = ScriptDirectory.GetFiles("*.sql", SearchOption.AllDirectories);
+                foreach (var file in fileList)
+                {
+                    if (!filter(file))
+                    {
+                        await Logger.LogMessageAsync(
+                            "Filtering out file because its in an unsupported subdirectory: " + file.FullName,
+                            SeverityLevel.Warning);
+                    }
+                    else
+                    {
+                        result.Add(file);
+                    }
+                }
+                return result;
             }
         }
     }
