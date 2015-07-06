@@ -5,6 +5,7 @@ using System.IO.Abstractions;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ZocBuild.Database.Logging;
 using ZocBuild.Database.SqlParser;
 
 namespace ZocBuild.Database.ScriptRepositories
@@ -46,9 +47,10 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <param name="databaseName">The name of the database.</param>
         /// <param name="fileSystem">An object that provides access to the file system.</param>
         /// <param name="sqlParser">The sql script parser for reading the SQL file contents.</param>
+        /// <param name="logger">A Logger</param>
         /// <param name="ignoreUnsupportedSubdirectories">A flag indicating whether to ignore subdirectories that don't conform to the expected naming convention.</param>
-        protected DvcsScriptRepositoryBase(string scriptDirectoryPath, string serverName, string databaseName, IFileSystem fileSystem, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
-            : base(scriptDirectoryPath, serverName, databaseName, fileSystem, sqlParser, ignoreUnsupportedSubdirectories)
+        protected DvcsScriptRepositoryBase(string scriptDirectoryPath, string serverName, string databaseName, IFileSystem fileSystem, IParser sqlParser, ILogger logger, bool ignoreUnsupportedSubdirectories)
+            : base(scriptDirectoryPath, serverName, databaseName, fileSystem, sqlParser, logger, ignoreUnsupportedSubdirectories)
         {
         }
 
@@ -60,9 +62,10 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <param name="databaseName">The name of the database.</param>
         /// <param name="fileSystem">An object that provides access to the file system.</param>
         /// <param name="sqlParser">The sql script parser for reading the SQL file contents.</param>
+        /// <param name="logger">A Logger</param>
         /// <param name="ignoreUnsupportedSubdirectories">A flag indicating whether to ignore subdirectories that don't conform to the expected naming convention.</param>
-        protected DvcsScriptRepositoryBase(DirectoryInfoBase scriptDirectory, string serverName, string databaseName, IFileSystem fileSystem, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
-            : base(scriptDirectory, serverName, databaseName, fileSystem, sqlParser, ignoreUnsupportedSubdirectories)
+        protected DvcsScriptRepositoryBase(DirectoryInfoBase scriptDirectory, string serverName, string databaseName, IFileSystem fileSystem, IParser sqlParser, ILogger logger, bool ignoreUnsupportedSubdirectories)
+            : base(scriptDirectory, serverName, databaseName, fileSystem, sqlParser, logger, ignoreUnsupportedSubdirectories)
         {
         }
 
