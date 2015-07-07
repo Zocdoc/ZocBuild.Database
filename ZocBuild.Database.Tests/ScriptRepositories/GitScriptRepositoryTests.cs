@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.IO.Abstractions;
+using System.IO.Abstractions.TestingHelpers;
 using System.Linq;
 using System.Threading.Tasks;
 using Moq;
 using NUnit.Framework;
 using ZocBuild.Database.Logging;
 using ZocBuild.Database.ScriptRepositories;
-using ZocBuild.Database.SqlParser;
 using ZocBuild.Database.Tests.Fakes;
 
 namespace ZocBuild.Database.Tests.ScriptRepositories
@@ -23,27 +23,28 @@ namespace ZocBuild.Database.Tests.ScriptRepositories
 
         private GitScriptRepository _service;
         private FakeLogger _logger;
-        private FakeDirectoryInfo _directory;
+        private MockDirectoryInfo _directory;
         private FakeParser _parser;
+        private MockFileSystem _fileSystem;
 
         [SetUp]
         public void SetUp()
         {
-            
             var gitExe = new Mock<IExternalProcess>();
-            var fileSystem = new Mock<IFileSystem>();
             
             _parser = new FakeParser();
-            _directory = new FakeDirectoryInfo(databaseName);
             _logger = new FakeLogger();
 
-            _service = new GitScriptRepository(_directory, "servername", databaseName, gitExe.Object, fileSystem.Object, _parser, _logger, true);
+            _fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>());
+            _directory = new MockDirectoryInfo(_fileSystem, @"C:\databasename");
+
+            _service = new GitScriptRepository(_directory, "servername", databaseName, gitExe.Object, _fileSystem, _parser, _logger, true);
         }
 
         [Test]
         public async Task GetAllScriptsAsync_NoChangeset()
         {
-            AssumeFileExistsWithContents(new FakeDirectoryInfo(_directory, "procedure"), goodPrcFileName, goodPrcContents);
+            AssumeFileExistsWithContents(@"C:\databasename\procedure", goodPrcFileName, goodPrcContents);
             SetScriptParseOutput(goodPrcFileName, goodPrcContents, DatabaseObjectType.Procedure);
 
             var scripts = await _service.GetAllScriptsAsync();
@@ -54,8 +55,8 @@ namespace ZocBuild.Database.Tests.ScriptRepositories
         [Test]
         public async Task GetAllScriptsAsync_NoChangeset_LogsInvalidFile()
         {
-            AssumeFileExistsWithContents(new FakeDirectoryInfo(_directory, "procedure"), goodPrcFileName, goodPrcContents);
-            AssumeFileExistsWithContents(new FakeDirectoryInfo(_directory, "foobar"), badPrcFileName, badPrcContents);
+            AssumeFileExistsWithContents(@"C:\databasename\procedure", goodPrcFileName, goodPrcContents);
+            AssumeFileExistsWithContents(@"C:\databasename\foobar", badPrcFileName, badPrcContents);
             SetScriptParseOutput(goodPrcFileName, goodPrcContents, DatabaseObjectType.Procedure);
 
             var scripts = await _service.GetAllScriptsAsync();
@@ -70,7 +71,7 @@ namespace ZocBuild.Database.Tests.ScriptRepositories
             Assert.AreEqual(1, _logger.Logs.Count);
             var logMessage = _logger.Logs.Single();
             Assert.AreEqual(SeverityLevel.Warning, logMessage.Item1);
-            Assert.AreEqual("Filtering out file because its in an unsupported subdirectory: invalidprocedure_prc.sql",
+            Assert.AreEqual("Filtering out file because its in an unsupported subdirectory: C:\\databasename\\foobar\\invalidprocedure_prc.sql",
                 logMessage.Item2);
         }
 
@@ -83,7 +84,7 @@ namespace ZocBuild.Database.Tests.ScriptRepositories
             Assert.AreEqual(databaseName, scriptFile.ScriptObject.DatabaseName);
         }
 
-        private FakeSqlScript SetScriptParseOutput(
+        private void SetScriptParseOutput(
             string name,
             string content,
             DatabaseObjectType objectType,
@@ -97,27 +98,16 @@ namespace ZocBuild.Database.Tests.ScriptRepositories
             script.OriginalText = content;
 
             _parser.ParseScriptOutput[content] = script;
-
-            return script;
         }
 
 
-        private FakeFileInfo AssumeFileExistsWithContents(
-            FakeDirectoryInfo directoryInfo, 
+        private void AssumeFileExistsWithContents(
+            string path, 
             string fileName,
             string contents
             )
         {
-            var fileInfo = AssumeFileExists(directoryInfo, fileName);
-            fileInfo.SetFileContent(contents);
-            return fileInfo;
-        }
-
-        private FakeFileInfo AssumeFileExists(FakeDirectoryInfo directoryInfo, string fileName)
-        {
-            var fileInfo = new FakeFileInfo(fileName, directoryInfo);
-            _directory.Files.Add(fileInfo);
-            return fileInfo;
+            _fileSystem.AddFile(path + @"\" + fileName, new MockFileData(contents));
         }
     }
 }
