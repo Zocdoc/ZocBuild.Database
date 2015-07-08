@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
@@ -7,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ZocBuild.Database.Errors;
 using ZocBuild.Database.Exceptions;
+using ZocBuild.Database.Logging;
 using ZocBuild.Database.SqlParser;
 using ZocBuild.Database.Util;
 
@@ -37,6 +39,11 @@ namespace ZocBuild.Database.ScriptRepositories
         /// A function that indicates whether a given file is in a managed directory.
         /// </summary>
         protected readonly Func<FileInfoBase, bool> IsFileInSupportedDirectory;
+        
+        /// <summary>
+        /// A Logger
+        /// </summary>
+        protected readonly ILogger Logger;
 
         #region Constructors
 
@@ -48,9 +55,10 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <param name="databaseName">The name of the database.</param>
         /// <param name="fileSystem">An object that provides access to the file system.</param>
         /// <param name="sqlParser">The sql script parser for reading the SQL file contents.</param>
+        /// <param name="logger">A Logger</param>
         /// <param name="ignoreUnsupportedSubdirectories">A flag indicating whether to ignore subdirectories that don't conform to the expected naming convention.</param>
-        public FileSystemScriptRepository(string scriptDirectoryPath, string serverName, string databaseName, IFileSystem fileSystem, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
-            : this(fileSystem.DirectoryInfo.FromDirectoryName(scriptDirectoryPath), serverName, databaseName, fileSystem, sqlParser, ignoreUnsupportedSubdirectories)
+        public FileSystemScriptRepository(string scriptDirectoryPath, string serverName, string databaseName, IFileSystem fileSystem, IParser sqlParser, ILogger logger, bool ignoreUnsupportedSubdirectories)
+            : this(fileSystem.DirectoryInfo.FromDirectoryName(scriptDirectoryPath), serverName, databaseName, fileSystem, sqlParser, logger, ignoreUnsupportedSubdirectories)
         {
         }
 
@@ -62,9 +70,11 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <param name="databaseName">The name of the database.</param>
         /// <param name="fileSystem">An object that provides access to the file system.</param>
         /// <param name="sqlParser">The sql script parser for reading the SQL file contents.</param>
+        /// <param name="logger">A Logger</param>
         /// <param name="ignoreUnsupportedSubdirectories">A flag indicating whether to ignore subdirectories that don't conform to the expected naming convention.</param>
-        public FileSystemScriptRepository(DirectoryInfoBase scriptDirectory, string serverName, string databaseName, IFileSystem fileSystem, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
+        public FileSystemScriptRepository(DirectoryInfoBase scriptDirectory, string serverName, string databaseName, IFileSystem fileSystem, IParser sqlParser, ILogger logger, bool ignoreUnsupportedSubdirectories)
         {
+            Logger = logger;
             ScriptDirectory = scriptDirectory;
             ServerName = serverName.TrimObjectName();
             DatabaseName = databaseName.TrimObjectName();
@@ -143,7 +153,7 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <returns>A collection of build scripts.</returns>
         public virtual async Task<ICollection<ScriptFile>> GetAllScriptsAsync()
         {
-            return await GetScriptsAsync(f => true);
+            return await GetScriptsAsync();
         }
 
         /// <summary>
@@ -186,23 +196,28 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <summary>
         /// Gets the build scripts in the repository that satisfy the given predicate.
         /// </summary>
-        /// <param name="filter">The predicate with which the build scripts are filtered.</param>
         /// <returns>A collection of build scripts.</returns>
-        protected virtual async Task<ICollection<ScriptFile>> GetScriptsAsync(Func<FileInfoBase, bool> filter)
+        protected virtual async Task<ICollection<ScriptFile>> GetScriptsAsync()
         {
             Func<FileInfoBase, bool> saferFilter;
             if (IgnoreUnsupportedSubdirectories)
             {
-                saferFilter = f => IsFileInSupportedDirectory(f) && filter(f);
+                saferFilter = f => IsFileInSupportedDirectory(f);
             }
             else
             {
-                saferFilter = filter;
+                saferFilter = f => true;
             }
 
             var scripts = new List<ScriptFile>();
-            foreach (var f in ScriptDirectory.GetFiles("*.sql", SearchOption.AllDirectories).Where(saferFilter))
+            foreach (var f in ScriptDirectory.GetFiles("*.sql", SearchOption.AllDirectories))
             {
+                if (!saferFilter(f))
+                {
+                    await Logger.LogMessageAsync("Filtering out file because its in an unsupported subdirectory: " + f.FullName, SeverityLevel.Warning);
+                    continue;
+                }
+
                 var script = await GetScriptAsync(f);
                 scripts.Add(script);
             }

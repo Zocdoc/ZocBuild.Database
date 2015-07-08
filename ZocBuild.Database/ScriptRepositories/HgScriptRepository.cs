@@ -6,6 +6,7 @@ using System.IO.Abstractions;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ZocBuild.Database.Logging;
 using ZocBuild.Database.SqlParser;
 
 namespace ZocBuild.Database.ScriptRepositories
@@ -36,9 +37,10 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <param name="hgExecutable">The Hg executable for interfacing with the dvcs repository.</param>
         /// <param name="fileSystem">An object that provides access to the file system.</param>
         /// <param name="sqlParser">The sql script parser for reading the SQL file contents.</param>
+        /// <param name="logger">A Logger</param>
         /// <param name="ignoreUnsupportedSubdirectories">A flag indicating whether to ignore subdirectories that don't conform to the expected naming convention.</param>
-        public HgScriptRepository(string scriptDirectoryPath, string serverName, string databaseName, IExternalProcess hgExecutable, IFileSystem fileSystem, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
-            : base(scriptDirectoryPath, serverName, databaseName, fileSystem, sqlParser, ignoreUnsupportedSubdirectories)
+        public HgScriptRepository(string scriptDirectoryPath, string serverName, string databaseName, IExternalProcess hgExecutable, IFileSystem fileSystem, IParser sqlParser, ILogger logger, bool ignoreUnsupportedSubdirectories)
+            : base(scriptDirectoryPath, serverName, databaseName, fileSystem, sqlParser, logger, ignoreUnsupportedSubdirectories)
         {
             HgExecutable = hgExecutable;
         }
@@ -52,9 +54,10 @@ namespace ZocBuild.Database.ScriptRepositories
         /// <param name="hgExecutable">The Hg executable for interfacing with the dvcs repository.</param>
         /// <param name="fileSystem">An object that provides access to the file system.</param>
         /// <param name="sqlParser">The sql script parser for reading the SQL file contents.</param>
+        /// <param name="logger">A Logger</param>
         /// <param name="ignoreUnsupportedSubdirectories">A flag indicating whether to ignore subdirectories that don't conform to the expected naming convention.</param>
-        public HgScriptRepository(DirectoryInfoBase scriptDirectory, string serverName, string databaseName, IExternalProcess hgExecutable, IFileSystem fileSystem, IParser sqlParser, bool ignoreUnsupportedSubdirectories)
-            : base(scriptDirectory, serverName, databaseName, fileSystem, sqlParser, ignoreUnsupportedSubdirectories)
+        public HgScriptRepository(DirectoryInfoBase scriptDirectory, string serverName, string databaseName, IExternalProcess hgExecutable, IFileSystem fileSystem, IParser sqlParser,  ILogger logger, bool ignoreUnsupportedSubdirectories)
+            : base(scriptDirectory, serverName, databaseName, fileSystem, sqlParser, logger, ignoreUnsupportedSubdirectories)
         {
             HgExecutable = hgExecutable;
         }
@@ -95,16 +98,42 @@ namespace ZocBuild.Database.ScriptRepositories
                 foreach(var line in fileList)
                 {
                     var file = FileSystem.FileInfo.FromFileName(Path.Combine(ScriptDirectory.FullName, line));
-                    if (file.Extension.Equals(".sql", StringComparison.InvariantCultureIgnoreCase) && filter(file))
+                    if (file.Extension.Equals(".sql", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        result.Add(file);
+                        if (!filter(file))
+                        {
+                            await Logger.LogMessageAsync(
+                                    "Filtering out file because its in an unsupported subdirectory: " + file.FullName,
+                                    SeverityLevel.Warning);
+                        }
+                        else
+                        {
+                            result.Add(file);
+                        }
                     }
+
+
                 }
                 return result;
             }
             else
             {
-                return ScriptDirectory.GetFiles("*.sql", SearchOption.AllDirectories).Where(filter).ToList();
+                var result = new List<FileInfoBase>();
+                var fileList = ScriptDirectory.GetFiles("*.sql", SearchOption.AllDirectories);
+                foreach (var file in fileList)
+                {
+                    if (!filter(file))
+                    {
+                        await Logger.LogMessageAsync(
+                            "Filtering out file because its in an unsupported subdirectory: " + file.FullName,
+                            SeverityLevel.Warning);
+                    }
+                    else
+                    {
+                        result.Add(file);
+                    }
+                }
+                return result;
             }
         }
     }

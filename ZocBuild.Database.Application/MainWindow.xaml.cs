@@ -25,6 +25,7 @@ using ZocBuild.Database.Application.Settings;
 using ZocBuild.Database.Application.ViewModels;
 using ZocBuild.Database.ScriptRepositories;
 using ZocBuild.Database.SqlParser;
+using ZocBuild.Database.Logging;
 
 namespace ZocBuild.Database.Application
 {
@@ -111,7 +112,7 @@ namespace ZocBuild.Database.Application
                     var fileSystem = new FileSystem();
                     var db = dbSetting.Create(connection, transaction);
                     var gitProcess = new ExternalProcess(pathToGit.FullName);
-                    var dvcsScriptRepo = new GitScriptRepository(dbSetting.ScriptsPath, dbSetting.ServerName, dbSetting.DatabaseName, gitProcess, fileSystem, sqlParser, false);
+                    var dvcsScriptRepo = new GitScriptRepository(dbSetting.ScriptsPath, dbSetting.ServerName, dbSetting.DatabaseName, gitProcess, fileSystem, sqlParser, new ConsoleLogger(SeverityLevel.Warning), false);
                     dvcsScriptRepo.SourceChangeset = sourceChangeset;
 
                     buildItems = await db.GetChangedBuildItemsAsync(dvcsScriptRepo);
