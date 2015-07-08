@@ -9,9 +9,23 @@ namespace ZocBuild.Database.Tests.Fakes
     {
         public List<Tuple<SeverityLevel, string>> Logs = new List<Tuple<SeverityLevel, string>>();
 
-        public async Task LogMessageAsync(string message, SeverityLevel severity)
+        public Task LogMessageAsync(string message, SeverityLevel severity)
         {
+#if NET_40
+            return NoOpAsync();
+#else
             Logs.Add(new Tuple<SeverityLevel, string>(severity, message));
+            return Task.FromResult<object>(null);
+#endif
         }
+
+#if NET_40
+#pragma warning disable 1998
+        private static async Task NoOpAsync()
+        {
+
+        }
+#pragma warning restore 1998
+#endif
     }
 }
