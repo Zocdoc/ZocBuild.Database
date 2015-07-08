@@ -11,10 +11,11 @@ namespace ZocBuild.Database.Tests.Fakes
 
         public Task LogMessageAsync(string message, SeverityLevel severity)
         {
+            Logs.Add(new Tuple<SeverityLevel, string>(severity, message));
+
 #if NET_40
             return NoOpAsync();
 #else
-            Logs.Add(new Tuple<SeverityLevel, string>(severity, message));
             return Task.FromResult<object>(null);
 #endif
         }
