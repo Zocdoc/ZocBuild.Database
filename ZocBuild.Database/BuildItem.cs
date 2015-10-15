@@ -54,11 +54,26 @@ namespace ZocBuild.Database
         /// <summary>
         /// Defines an enumeration of the possible methods a build script can be applied.
         /// </summary>
-        internal enum BuildActionType
+        public enum BuildActionType
         {
+            /// <summary>
+            /// Will create a new object
+            /// </summary>
             Create,
+
+            /// <summary>
+            /// Will alter an existing object
+            /// </summary>
             Alter,
+
+            /// <summary>
+            /// Will drop and recreate an existing object
+            /// </summary>
             DropAndCreate,
+
+            /// <summary>
+            /// Will drop an existing object
+            /// </summary>
             Drop
         }
 
@@ -177,7 +192,7 @@ namespace ZocBuild.Database
         /// <remarks>
         /// This should only be used internally by build classes.
         /// </remarks>
-        internal BuildActionType BuildAction { get; set; }
+        public BuildActionType BuildAction { get; internal set; }
 
         /// <summary>
         /// Raised when the <see cref="Status"/> property changes.
