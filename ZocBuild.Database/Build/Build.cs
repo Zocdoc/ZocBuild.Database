@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using ZocBuild.Database.DependencyWalking;
 using ZocBuild.Database.Errors;
 using ZocBuild.Database.Exceptions;
+using ZocBuild.Database.Logging;
 using ZocBuild.Database.ScriptRepositories;
 using ZocBuild.Database.SqlParser;
 using ZocBuild.Database.Util;
@@ -18,16 +19,19 @@ namespace ZocBuild.Database.Build
     {
         private readonly IDbConnection _connection;
         private readonly IDbTransaction _transaction;
+        private readonly ILogger _logger;
 
         /// <summary>
         /// Instantiates a build object which can execute object definition scripts.
         /// </summary>
         /// <param name="connection">The open connection to the database.</param>
         /// <param name="transaction">The open transaction on which the scripts should be executed.</param>
-        public Build(IDbConnection connection, IDbTransaction transaction)
+        /// <param name="logger">A logger</param>
+        public Build(IDbConnection connection, IDbTransaction transaction, ILogger logger)
         {
-            this._connection = connection;
-            this._transaction = transaction;
+            _connection = connection;
+            _transaction = transaction;
+            _logger = logger;
         }
 
         /// <summary>
@@ -103,6 +107,8 @@ namespace ZocBuild.Database.Build
                 {
                     try
                     {
+                        await _logger.LogMessageAsync(s.Key.BuildAction + ": " + s.Key.DatabaseObject, SeverityLevel.Verbose);
+
                         // Run script
                         await executor.ExecuteAsync(s.Key.Script, s.Key.BuildAction);
 

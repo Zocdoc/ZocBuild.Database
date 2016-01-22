@@ -279,7 +279,7 @@ namespace ZocBuild.Database
         /// <returns>A flag that indicates whether all scripts were executed successfully.</returns>
         public async Task<bool> BuildAsync(IEnumerable<BuildItem> items)
         {
-            var b = new Build.Build(Connection, Transaction);
+            var b = new Build.Build(Connection, Transaction, Logger);
             return await b.BuildItemsAsync(items);
         }
 
