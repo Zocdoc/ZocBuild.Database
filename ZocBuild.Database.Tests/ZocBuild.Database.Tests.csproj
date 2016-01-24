@@ -55,6 +55,7 @@
   <ItemGroup>
     <Compile Include="Fakes\FakeLogger.cs" />
     <Compile Include="Fakes\FakeParser.cs" />
+    <Compile Include="ScriptRepositories\FileSystemScriptRepositoryTests.cs" />
     <Compile Include="ScriptRepositories\GitScriptRepositoryTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
