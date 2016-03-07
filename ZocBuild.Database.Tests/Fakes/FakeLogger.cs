@@ -13,20 +13,7 @@ namespace ZocBuild.Database.Tests.Fakes
         {
             Logs.Add(new Tuple<SeverityLevel, string>(severity, message));
 
-#if NET_40
-            return NoOpAsync();
-#else
             return Task.FromResult<object>(null);
-#endif
         }
-
-#if NET_40
-#pragma warning disable 1998
-        private static async Task NoOpAsync()
-        {
-
-        }
-#pragma warning restore 1998
-#endif
     }
 }

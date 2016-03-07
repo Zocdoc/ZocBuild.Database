@@ -203,22 +203,12 @@ namespace ZocBuild.Database.Application
                 await ShowExceptionMessage(exception);
             };
 
-#if NET_40
-            Task.Factory.StartNew(wrappedTask);
-#else
             Task.Run(wrappedTask);
-#endif
         }
 
-#pragma warning disable 1998
         private async Task DispatcherInvoke(Action a)
         {
-#if NET_40
-            Dispatcher.BeginInvoke(a);
-#else
             await Dispatcher.BeginInvoke(a);
-#endif
         }
-#pragma warning restore 1998
     }
 }

@@ -9,14 +9,10 @@ using System.Threading.Tasks;
 
 namespace ZocBuild.Database.Util
 {
-#pragma warning disable 1998
     internal static class DataReaderExtensions
     {
         public static async Task<bool> ReadAsync(this IDataReader reader)
         {
-#if NET_40
-            return reader.Read();
-#else
             var sqlReader = reader as DbDataReader;
             if (sqlReader != null)
             {
@@ -26,14 +22,10 @@ namespace ZocBuild.Database.Util
             {
                 return reader.Read();
             }
-#endif
         }
 
         public static async Task<bool> NextResultAsync(this IDataReader reader)
         {
-#if NET_40
-            return reader.NextResult();
-#else
             var sqlReader = reader as DbDataReader;
             if (sqlReader != null)
             {
@@ -43,7 +35,6 @@ namespace ZocBuild.Database.Util
             {
                 return reader.NextResult();
             }
-#endif
         }
 
         public static async Task<T> GetFieldValueAsync<T>(this IDataReader reader, string name)
@@ -55,10 +46,6 @@ namespace ZocBuild.Database.Util
 
         public static async Task<T> GetFieldValueAsync<T>(this IDataReader reader, int ordinal)
         {
-#if NET_40
-            // TODO: Implement a smarter conversion mechanism
-            return (T)reader.GetValue(ordinal);
-#else
             var sqlReader = reader as DbDataReader;
             if (sqlReader != null)
             {
@@ -69,8 +56,6 @@ namespace ZocBuild.Database.Util
                 // TODO: Implement a smarter conversion mechanism
                 return (T)reader.GetValue(ordinal);
             }
-#endif
         }
     }
-#pragma warning restore 1998
 }
