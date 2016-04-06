@@ -26,6 +26,7 @@ namespace ZocBuild.Database.DatabaseState
         {
             var cmd = _connection.CreateCommand();
             cmd.Transaction = _transaction;
+            cmd.CommandTimeout = 60;
             cmd.CommandText = @"
 Select
 	ISNULL(o.name, t.name) as objectName,
