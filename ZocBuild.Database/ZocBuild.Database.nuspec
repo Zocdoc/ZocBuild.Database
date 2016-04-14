@@ -15,19 +15,12 @@
 			<group>
 				<dependency id="System.IO.Abstractions" version="2.0.0.108" />
 			</group>
-			<group targetFramework="net40">
-				<dependency id="System.IO.Abstractions" version="2.0.0.108" />
-				<dependency id="Microsoft.Bcl.Async" version="1.0.168" />
-			</group>
 		</dependencies>
 	</metadata>
 	<files>
 		<file src="bin\$configuration$\v4.5\ZocBuild.Database.dll" target="lib\net45" />
 		<file src="bin\$configuration$\v4.5\ZocBuild.Database.pdb" target="lib\net45" />
 		<file src="bin\$configuration$\v4.5\ZocBuild.Database.xml" target="lib\net45" />
-		<file src="bin\$configuration$\v4.0\ZocBuild.Database.dll" target="lib\net40" />
-		<file src="bin\$configuration$\v4.0\ZocBuild.Database.pdb" target="lib\net40" />
-		<file src="bin\$configuration$\v4.0\ZocBuild.Database.xml" target="lib\net40" />
 		<file src="**\*.cs" target="src" />
 	</files>
 </package>

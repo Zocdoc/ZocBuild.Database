@@ -19,20 +19,7 @@ namespace ZocBuild.Database.Logging
         /// <returns>A task that represents the asynchronous operation.</returns>
         public Task LogMessageAsync(string message, SeverityLevel severity)
         {
-#if NET_40
-            return NoOpAsync();
-#else
             return Task.FromResult<object>(null);
-#endif
         }
-
-#if NET_40
-#pragma warning disable 1998
-        private static async Task NoOpAsync()
-        {
-
-        }
-#pragma warning restore 1998
-#endif
     }
 }
